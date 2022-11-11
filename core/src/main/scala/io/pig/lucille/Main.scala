@@ -31,12 +31,12 @@ object Parser {
   val phrase = (term ~ sp.?).rep.surroundedBy(dquote).string
   val termClause = term | phrase
   val searchWords: Parser0[SimpleQ] =
-    (phrase | (term ~ sp.?).rep.string).map(SimpleQ)
+    (phrase | (term ~ sp.?).rep.string).map(SimpleQ.apply)
 
   val fieldName = alpha.rep.string
   val fieldValueSoft = fieldName.soft <* pchar(':')
   val fieldQuery: Parser0[FieldQ] =
-    (fieldValueSoft ~ termClause).map(FieldQ.tupled)
+    (fieldValueSoft ~ termClause).map(FieldQ.tupled.apply)
 
   val pq: Parser0[Query] = P.oneOf0(fieldQuery :: searchWords :: Nil)
 
