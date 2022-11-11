@@ -36,7 +36,7 @@ object Parser {
   val fieldName = alpha.rep.string
   val fieldValueSoft = fieldName.soft <* pchar(':')
   val fieldQuery: Parser0[FieldQ] =
-    (fieldValueSoft ~ termClause).map(FieldQ.tupled.apply)
+    (fieldValueSoft ~ termClause).map { case (f, q) => FieldQ(f, q) }
 
   val pq: Parser0[Query] = P.oneOf0(fieldQuery :: searchWords :: Nil)
 
