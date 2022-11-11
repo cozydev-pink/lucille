@@ -43,7 +43,7 @@ object Parser {
   // From https://github.com/typelevel/cats-parse/issues/205
   private def rep0sep0[A](
       data: Parser0[A],
-      separator: P[Any]
+      separator: P[Any],
   ): Parser0[List[A]] =
     (data.? ~ (separator *> data).rep0).map { case (a, as) => a ++: as }
 
