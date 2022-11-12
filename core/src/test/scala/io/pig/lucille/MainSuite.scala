@@ -58,4 +58,19 @@ class ParserSuite extends munit.FunSuite {
     val r = query.parseAll("\"derp lerp\"~3.2")
     assert(r.isLeft)
   }
+
+  test("parse fuzzy term without number parses completely") {
+    val r = query.parseAll("derp~")
+    assert(r.isRight)
+  }
+
+  test("parse fuzzy term with number parses completely") {
+    val r = query.parseAll("derp~2")
+    assert(r.isRight)
+  }
+
+  test("parse fuzzy term with decimal does not parse") {
+    val r = query.parseAll("derp~3.2")
+    assert(r.isLeft)
+  }
 }
