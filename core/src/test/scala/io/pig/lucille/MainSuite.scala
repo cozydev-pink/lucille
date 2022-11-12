@@ -73,4 +73,15 @@ class ParserSuite extends munit.FunSuite {
     val r = query.parseAll("derp~3.2")
     assert(r.isLeft)
   }
+
+  test("parse two term OR query completely") {
+    val r = query.parseAll("derp OR lerp")
+    assert(r.isRight)
+  }
+
+  test("parse simple term and phrase OR query completely") {
+    val r = query.parse("derp OR \"lerp slerp\"")
+    println(r)
+    assert(r.isRight)
+  }
 }

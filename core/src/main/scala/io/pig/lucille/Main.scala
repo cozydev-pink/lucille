@@ -16,7 +16,7 @@
 
 package io.pig.lucille
 
-import cats.parse.{Parser => P, Parser0}
+import cats.parse.{Parser => P}
 import cats.parse.Rfc5234.{sp, alpha, digit}
 import cats.parse.Parser.{char => pchar}
 
@@ -27,40 +27,42 @@ object Parser {
   final case class FieldQ(field: String, q: String) extends Query
   final case class ProximityQ(q: String, num: Int) extends Query
   final case class FuzzyTerm(q: String, num: Option[Int]) extends Query
+  final case class OrQ(left: Query, right: Query) extends Query
 
   val dquote = pchar('"')
-  val term = alpha.rep.string
-  val phrase = (term ~ sp.?).rep.surroundedBy(dquote).string
-  val termClause = term | phrase
-  val searchWords: Parser0[SimpleQ] =
+  val term: P[String] = alpha.rep.string
+  val phrase: P[String] = (term ~ sp.?).rep.surroundedBy(dquote).string
+  val termClause: P[String] = term | phrase
+  val searchWords: P[SimpleQ] =
     (phrase | (term ~ sp.?).rep.string).map(SimpleQ.apply)
 
-  val fieldName = alpha.rep.string
-  val fieldValueSoft = fieldName.soft <* pchar(':')
-  val fieldQuery: Parser0[FieldQ] =
+  val fieldName: P[String] = alpha.rep.string
+  val fieldValueSoft: P[String] = fieldName.soft <* pchar(':')
+  val fieldQuery: P[FieldQ] =
     (fieldValueSoft ~ termClause).map { case (f, q) => FieldQ(f, q) }
 
-  val int = digit.rep.string.map(_.toInt)
+  val int: P[Int] = digit.rep.string.map(_.toInt)
   // TODO can this be a full phrase or only a 2 word phrase?
-  val proxSoft = phrase.soft <* pchar('~')
-  val proximityQuery: Parser0[ProximityQ] = (proxSoft ~ int).map { case (p, n) =>
+  val proxSoft: P[String] = phrase.soft <* pchar('~')
+  val proximityQuery: P[ProximityQ] = (proxSoft ~ int).map { case (p, n) =>
     ProximityQ(p, n)
   }
 
-  val fuzzySoft = term.soft <* pchar('~')
-  val fuzzyTerm: Parser0[FuzzyTerm] = (fuzzySoft ~ int.?).map { case (q, n) =>
+  val fuzzySoft: P[String] = term.soft <* pchar('~')
+  val fuzzyTerm: P[FuzzyTerm] = (fuzzySoft ~ int.?).map { case (q, n) =>
     FuzzyTerm(q, n)
   }
 
-  val pq: Parser0[Query] = P.oneOf0(fieldQuery :: proximityQuery :: fuzzyTerm :: searchWords :: Nil)
+  val simpleQ: P[Query] =
+    P.oneOf(fieldQuery :: proximityQuery :: fuzzyTerm :: searchWords :: Nil)
 
-  // From https://github.com/typelevel/cats-parse/issues/205
-  private def rep0sep0[A](
-      data: Parser0[A],
-      separator: P[Any],
-  ): Parser0[List[A]] =
-    (data.? ~ (separator *> data).rep0).map { case (a, as) => a ++: as }
+  val or = P.string("OR") | P.string("||")
+  def orQ(pa: P[Query]): P[Query] = ((pa.soft <* or) ~ pa).map { case (l, r) => OrQ(l, r) }
 
-  val query = rep0sep0(pq, sp)
+  val pq: P[Query] = P.recursive[Query] { recurse =>
+    P.oneOf(simpleQ :: orQ(recurse) :: Nil)
+  }
+
+  val query = pq.repSep0(sp)
 
 }
