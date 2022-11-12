@@ -28,6 +28,7 @@ object Parser {
   final case class ProximityQ(q: String, num: Int) extends Query
   final case class FuzzyTerm(q: String, num: Option[Int]) extends Query
   final case class OrQ(left: Query, right: Query) extends Query
+  final case class AndQ(left: Query, right: Query) extends Query
 
   val dquote = pchar('"')
   val term: P[String] = alpha.rep.string
@@ -59,8 +60,11 @@ object Parser {
   val or = P.string("OR") | P.string("||")
   def orQ(pa: P[Query]): P[Query] = ((pa.soft <* or) ~ pa).map { case (l, r) => OrQ(l, r) }
 
+  val and = P.string("AND") | P.string("&&")
+  def andQ(pa: P[Query]): P[Query] = ((pa.soft <* and) ~ pa).map { case (l, r) => AndQ(l, r) }
+
   val pq: P[Query] = P.recursive[Query] { recurse =>
-    P.oneOf(simpleQ :: orQ(recurse) :: Nil)
+    P.oneOf(simpleQ :: orQ(recurse) :: andQ(recurse) :: Nil)
   }
 
   val query = pq.repSep0(sp)
