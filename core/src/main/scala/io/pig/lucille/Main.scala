@@ -40,6 +40,7 @@ object Parser {
     (fieldValueSoft ~ termClause).map { case (f, q) => FieldQ(f, q) }
 
   val proxD = digit.rep.string.map(_.toInt)
+  // TODO can this be a full phrase or only a 2 word phrase?
   val proxSoft = phrase.soft <* pchar('^')
   val proximityQuery: Parser0[ProximityQ] = (proxSoft ~ proxD).map { case (p, n) =>
     ProximityQ(p, n)
