@@ -48,4 +48,14 @@ class ParserSuite extends munit.FunSuite {
     val r = query.parseAll("fieldName:The cat jumped")
     assert(r.isRight)
   }
+
+  test("parse proximity query completely") {
+    val r = query.parseAll("\"derp lerp\"^3")
+    assert(r.isRight)
+  }
+
+  test("parse proximity with decimal does not parse") {
+    val r = query.parseAll("\"derp lerp\"^3.2")
+    assert(r.isLeft)
+  }
 }

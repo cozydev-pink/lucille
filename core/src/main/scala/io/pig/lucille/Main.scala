@@ -17,7 +17,7 @@
 package io.pig.lucille
 
 import cats.parse.{Parser => P, Parser0}
-import cats.parse.Rfc5234.{sp, alpha}
+import cats.parse.Rfc5234.{sp, alpha, digit}
 import cats.parse.Parser.{char => pchar}
 
 object Parser {
@@ -25,6 +25,7 @@ object Parser {
   sealed trait Query extends Product with Serializable
   final case class SimpleQ(q: String) extends Query
   final case class FieldQ(field: String, q: String) extends Query
+  final case class ProximityQ(q: String, num: Int) extends Query
 
   val dquote = pchar('"')
   val term = alpha.rep.string
@@ -38,7 +39,13 @@ object Parser {
   val fieldQuery: Parser0[FieldQ] =
     (fieldValueSoft ~ termClause).map { case (f, q) => FieldQ(f, q) }
 
-  val pq: Parser0[Query] = P.oneOf0(fieldQuery :: searchWords :: Nil)
+  val proxD = digit.rep.string.map(_.toInt)
+  val proxSoft = phrase.soft <* pchar('^')
+  val proximityQuery: Parser0[ProximityQ] = (proxSoft ~ proxD).map { case (p, n) =>
+    ProximityQ(p, n)
+  }
+
+  val pq: Parser0[Query] = P.oneOf0(fieldQuery :: proximityQuery :: searchWords :: Nil)
 
   // From https://github.com/typelevel/cats-parse/issues/205
   private def rep0sep0[A](
