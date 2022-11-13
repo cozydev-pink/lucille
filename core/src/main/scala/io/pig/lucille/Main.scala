@@ -98,6 +98,6 @@ object Parser {
 
   val query: P[NonEmptyList[Query]] = qWithSuffixOps(simpleQ)
 
-  def parseQ(s: String) = query.parseAll(s.trim.replaceAll(" +", " "))
+  def parseQ(s: String) = query.parseAll(s.trim)
 
 }
