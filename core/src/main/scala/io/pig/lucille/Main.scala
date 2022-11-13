@@ -19,26 +19,37 @@ package io.pig.lucille
 import cats.parse.{Parser => P}
 import cats.parse.Rfc5234.{sp, alpha, digit}
 import cats.parse.Parser.{char => pchar}
+import cats.data.NonEmptyList
+import cats.parse.Parser0
 
 object Parser {
 
   sealed trait Query extends Product with Serializable
-  final case class SimpleQ(q: String) extends Query
-  final case class FieldQ(field: String, q: String) extends Query
+  final case class TermQ(q: String) extends Query
+  final case class PhraseQ(q: String) extends Query
+  final case class FieldQ(field: String, q: Query) extends Query
   final case class ProximityQ(q: String, num: Int) extends Query
   final case class FuzzyTerm(q: String, num: Option[Int]) extends Query
-  final case class OrQ(left: Query, right: Query) extends Query
-  final case class AndQ(left: Query, right: Query) extends Query
+  final case class OrQ(qs: NonEmptyList[Query]) extends Query
+  final case class AndQ(qs: NonEmptyList[Query]) extends Query
+  final case class NotQ(q: Query) extends Query
 
   val dquote = pchar('"')
-  val term: P[String] = alpha.rep.string
-  val phrase: P[String] = (term ~ sp.?).rep.surroundedBy(dquote).string
-  val termClause: P[String] = term | phrase
-  val searchWords: P[SimpleQ] =
-    (phrase | (term ~ sp.?).rep.string).map(SimpleQ.apply)
+  val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
+  val maybeSpace: Parser0[Unit] = spaces.?.void
+
+  // Trying to fail on 'OR' quickly
+  val reserved = Set("OR", "||", "AND", "&&", "NOT")
+  val term: P[String] = P.not(P.stringIn(reserved)).with1 *> alpha.rep.string
+  val termQ: P[TermQ] = term.map(TermQ.apply)
+
+  val phrase: P[String] = (term ~ sp.?).rep.string.surroundedBy(dquote)
+  val phraseQ: P[PhraseQ] = phrase.map(PhraseQ.apply)
+  val termClause: P[Query] = termQ | phraseQ
 
   val fieldName: P[String] = alpha.rep.string
   val fieldValueSoft: P[String] = fieldName.soft <* pchar(':')
+  // Should this be a query?
   val fieldQuery: P[FieldQ] =
     (fieldValueSoft ~ termClause).map { case (f, q) => FieldQ(f, q) }
 
@@ -55,18 +66,38 @@ object Parser {
   }
 
   val simpleQ: P[Query] =
-    P.oneOf(fieldQuery :: proximityQuery :: fuzzyTerm :: searchWords :: Nil)
+    P.oneOf(fieldQuery :: proximityQuery :: fuzzyTerm :: termQ :: phraseQ :: Nil)
 
-  val or = P.string("OR") | P.string("||")
-  def orQ(pa: P[Query]): P[Query] = ((pa.soft <* or) ~ pa).map { case (l, r) => OrQ(l, r) }
+  sealed trait Op extends Product with Serializable
+  case object OR extends Op
+  case object AND extends Op
 
-  val and = P.string("AND") | P.string("&&")
-  def andQ(pa: P[Query]): P[Query] = ((pa.soft <* and) ~ pa).map { case (l, r) => AndQ(l, r) }
+  val or = (P.string("OR") | P.string("||")).as(OR)
+  val and = (P.string("AND") | P.string("&&")).as(AND)
+  val infixOp = or | and
+  def associateOps(q1: NonEmptyList[Query], qs: List[(Op, Query)]): NonEmptyList[Query] =
+    qs match {
+      case Nil => q1
+      case head :: _ => // TODO recurse
+        head match {
+          case (OR, q) => NonEmptyList.of(OrQ(NonEmptyList.of(q1.last, q)))
+          case (AND, q) => NonEmptyList.of(AndQ(NonEmptyList.of(q1.last, q)))
+        }
+    }
 
-  val pq: P[Query] = P.recursive[Query] { recurse =>
-    P.oneOf(simpleQ :: orQ(recurse) :: andQ(recurse) :: Nil)
+  // "  OR term OR   term$"
+  def opSuffix(pa: P[Query]): Parser0[List[(Op, Query)]] =
+    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ pa).rep0
+
+  // val not = P.string("NOT")
+  // def notQ(pa: P[Query]): P[Query] = (not *> pa).map(NotQ.apply)
+
+  def qWithSuffixOps(pa: P[Query]) = (pa.repSep(sp.rep) ~ opSuffix(pa)).map { case (h, t) =>
+    associateOps(h, t)
   }
 
-  val query = pq.repSep0(sp)
+  val query: P[NonEmptyList[Query]] = qWithSuffixOps(simpleQ)
+
+  def parseQ(s: String) = query.parseAll(s.trim.replaceAll(" +", " "))
 
 }
