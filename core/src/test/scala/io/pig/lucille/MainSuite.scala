@@ -17,7 +17,7 @@
 package io.pig.lucille
 import cats.data.NonEmptyList
 
-class ParserSuite extends munit.FunSuite {
+class SingleSimpleQuerySuite extends munit.FunSuite {
   import Parser._
 
   test("parse single term completely") {
@@ -30,16 +30,6 @@ class ParserSuite extends munit.FunSuite {
     assertEquals(r, Right(NonEmptyList.of(TermQ("the"))))
   }
 
-  test("parse multiple terms completely") {
-    val r = parseQ("The cat jumped")
-    assertEquals(r, Right(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
-  }
-
-  test("parse multiple terms with lots of spaces completely") {
-    val r = parseQ("The cat   jumped   ")
-    assertEquals(r, Right(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
-  }
-
   test("parse phrase term completely") {
     val r = parseQ("\"The cat jumped\"")
     assertEquals(r, Right(NonEmptyList.of(PhraseQ("The cat jumped"))))
@@ -48,6 +38,20 @@ class ParserSuite extends munit.FunSuite {
   test("parse field query with term completely") {
     val r = parseQ("fieldName:cat")
     assertEquals(r, Right(NonEmptyList.of(FieldQ("fieldName", TermQ("cat")))))
+  }
+}
+
+class MultiSimpleQuerySuite extends munit.FunSuite {
+  import Parser._
+
+  test("parse multiple terms completely") {
+    val r = parseQ("The cat jumped")
+    assertEquals(r, Right(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+  }
+
+  test("parse multiple terms with lots of spaces completely") {
+    val r = parseQ("The cat   jumped   ")
+    assertEquals(r, Right(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
   }
 
   test("parse field query with phrase completely") {
@@ -87,6 +91,10 @@ class ParserSuite extends munit.FunSuite {
     val r = parseQ("derp~3.2")
     assert(r.isLeft)
   }
+}
+
+class QueryWithSuffixOpsSuite extends munit.FunSuite {
+  import Parser._
 
   test("parse two term OR query completely") {
     val r = parseQ("derp OR lerp")
