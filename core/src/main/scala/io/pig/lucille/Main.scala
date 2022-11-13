@@ -98,31 +98,17 @@ object Parser {
           }
       }
 
-    q1 match {
-      case NonEmptyList(qLeft, Nil) =>
-        opQs match {
-          // only one Q
-
-          // no op suffices
-          case Nil => q1
-
-          case opHead :: _ =>
-            opHead match {
-              case (OR, _) => NonEmptyList.fromListUnsafe(go(qLeft :: Nil, OR, opQs))
-              case (AND, _) => NonEmptyList.fromListUnsafe(go(qLeft :: Nil, AND, opQs))
-            }
-        }
-      case NonEmptyList(h, atLeastOneQ) =>
-        // multiple queries on the left, we'll look at just the last one
-        val last = atLeastOneQ.last // safe because we already checked if it was empty
-        val allButLast = NonEmptyList(h, atLeastOneQ.dropRight(1))
-        opQs match {
-          case Nil => q1 // no op suffixes
-          case opHead :: _ =>
-            opHead match {
-              case (OR, _) => allButLast ++ go(last :: Nil, OR, opQs)
-              case (AND, _) => allButLast ++ go(last :: Nil, AND, opQs)
-            }
+    opQs match {
+      case Nil => q1
+      case opHead :: _ =>
+        q1 match {
+          case NonEmptyList(qLeft, Nil) =>
+            // safe because we know opQs has at least one element
+            NonEmptyList.fromListUnsafe(go(qLeft :: Nil, opHead._1, opQs))
+          case NonEmptyList(h, atLeastOneQ) =>
+            // multiple queries on the left, we'll look at just the last one
+            val allButLast = NonEmptyList(h, atLeastOneQ.dropRight(1))
+            allButLast ++ go(q1.last :: Nil, opHead._1, opQs)
         }
     }
   }
