@@ -16,29 +16,59 @@
 
 package io.pig.lucille
 import cats.data.NonEmptyList
+import cats.parse.Parser.Error
 
 class SingleSimpleQuerySuite extends munit.FunSuite {
   import Parser._
 
-  test("parse single term completely") {
+  def assertSingleTerm(r: Either[Error, NonEmptyList[Query]], expected: Query) =
+    assertEquals(r, Right(NonEmptyList.of(expected)))
+
+  test("parse single term") {
     val r = parseQ("the")
-    assertEquals(r, Right(NonEmptyList.of(TermQ("the"))))
+    assertSingleTerm(r, TermQ("the"))
   }
 
-  test("parse single term with trailing whitespace completely") {
+  test("parse single term with trailing whitespace") {
     val r = parseQ("the   ")
-    assertEquals(r, Right(NonEmptyList.of(TermQ("the"))))
+    assertSingleTerm(r, TermQ("the"))
   }
 
-  test("parse phrase term completely") {
+  test("parse single term with leading whitespace") {
+    val r = parseQ("  the")
+    assertSingleTerm(r, TermQ("the"))
+  }
+
+  test("parse single term with trailing and leading whitespace") {
+    val r = parseQ("  the      ")
+    assertSingleTerm(r, TermQ("the"))
+  }
+
+  test("parse phrase term") {
     val r = parseQ("\"The cat jumped\"")
-    assertEquals(r, Right(NonEmptyList.of(PhraseQ("The cat jumped"))))
+    assertSingleTerm(r, PhraseQ("The cat jumped"))
   }
 
-  test("parse field query with term completely") {
-    val r = parseQ("fieldName:cat")
-    assertEquals(r, Right(NonEmptyList.of(FieldQ("fieldName", TermQ("cat")))))
+  test("parse phrase term with leading and trailing whitespace") {
+    val r = parseQ("  \"The cat jumped\"  ")
+    assertSingleTerm(r, PhraseQ("The cat jumped"))
   }
+
+  test("parse field query with term") {
+    val r = parseQ("fieldName:cat")
+    assertSingleTerm(r, FieldQ("fieldName", TermQ("cat")))
+  }
+
+  test("parse field query with term with leading and trailing whitespace") {
+    val r = parseQ("  fieldName:cat  ")
+    assertSingleTerm(r, FieldQ("fieldName", TermQ("cat")))
+  }
+
+  test("parse field query with phrase") {
+    val r = parseQ("fieldName:\"The cat jumped\"")
+    assertEquals(r, Right(NonEmptyList.of(FieldQ("fieldName", PhraseQ("The cat jumped")))))
+  }
+
 }
 
 class MultiSimpleQuerySuite extends munit.FunSuite {
@@ -52,11 +82,6 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
   test("parse multiple terms with lots of spaces completely") {
     val r = parseQ("The cat   jumped   ")
     assertEquals(r, Right(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
-  }
-
-  test("parse field query with phrase completely") {
-    val r = parseQ("fieldName:\"The cat jumped\"")
-    assertEquals(r, Right(NonEmptyList.of(FieldQ("fieldName", PhraseQ("The cat jumped")))))
   }
 
   test("parse field query and terms completely") {
