@@ -75,15 +75,57 @@ object Parser {
   val or = (P.string("OR") | P.string("||")).as(OR)
   val and = (P.string("AND") | P.string("&&")).as(AND)
   val infixOp = or | and
-  def associateOps(q1: NonEmptyList[Query], qs: List[(Op, Query)]): NonEmptyList[Query] =
-    qs match {
-      case Nil => q1
-      case head :: _ => // TODO recurse
-        head match {
-          case (OR, q) => NonEmptyList.of(OrQ(NonEmptyList.of(q1.last, q)))
-          case (AND, q) => NonEmptyList.of(AndQ(NonEmptyList.of(q1.last, q)))
+
+  /** @param q1 queries parsed so far, the last one could be part of a suffixOp
+    * @param qs suffixOp and query pairs
+    * @return
+    */
+  def associateOps(q1: NonEmptyList[Query], opQs: List[(Op, Query)]): NonEmptyList[Query] = {
+    def go(acc: List[Query], op: Op, opQs: List[(Op, Query)]): List[Query] =
+      // println(s"go: acc=$acc, op=$op, opQs=$opQs")
+      opQs match {
+        case Nil =>
+          op match {
+            // no more ops to pair
+            case OR => List(OrQ(NonEmptyList.fromListUnsafe(acc)))
+            case AND => List(AndQ(NonEmptyList.fromListUnsafe(acc)))
+          }
+        case opP :: tailOpP =>
+          opP match {
+            case (OR, q) if op == OR => go(acc.appended(q), op, tailOpP)
+            case (AND, q) if op == AND => go(acc.appended(q), op, tailOpP)
+            case (_, _) => ???
+          }
+      }
+
+    q1 match {
+      case NonEmptyList(qLeft, Nil) =>
+        opQs match {
+          // only one Q
+
+          // no op suffices
+          case Nil => q1
+
+          case opHead :: _ =>
+            opHead match {
+              case (OR, _) => NonEmptyList.fromListUnsafe(go(qLeft :: Nil, OR, opQs))
+              case (AND, _) => NonEmptyList.fromListUnsafe(go(qLeft :: Nil, AND, opQs))
+            }
+        }
+      case NonEmptyList(h, atLeastOneQ) =>
+        // multiple queries on the left, we'll look at just the last one
+        val last = atLeastOneQ.last // safe because we already checked if it was empty
+        val allButLast = NonEmptyList(h, atLeastOneQ.dropRight(1))
+        opQs match {
+          case Nil => q1 // no op suffixes
+          case opHead :: _ =>
+            opHead match {
+              case (OR, _) => allButLast ++ go(last :: Nil, OR, opQs)
+              case (AND, _) => allButLast ++ go(last :: Nil, AND, opQs)
+            }
         }
     }
+  }
 
   // "  OR term OR   term$"
   def opSuffix(pa: P[Query]): Parser0[List[(Op, Query)]] =
@@ -98,6 +140,7 @@ object Parser {
 
   val query: P[NonEmptyList[Query]] = maybeSpace.with1 *> qWithSuffixOps(simpleQ)
 
+  // TODO fix
   def parseQ(s: String) = query.parseAll(s.stripTrailing)
 
 }

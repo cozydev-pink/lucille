@@ -18,6 +18,36 @@ package io.pig.lucille
 import cats.data.NonEmptyList
 import cats.parse.Parser.Error
 
+class AssociateOpsSuite extends munit.FunSuite {
+  // def associateOps(q1: NonEmptyList[Query], opQs: List[(Op, Query)]): NonEmptyList[Query] = {
+  import Parser._
+
+  test("associates ORs") {
+    val leftQs = NonEmptyList.of(TermQ("the"), TermQ("cat"))
+    val opQs = List((OR, TermQ("dog")))
+    val result = associateOps(leftQs, opQs)
+    val expected = NonEmptyList.of(TermQ("the"), OrQ(NonEmptyList.of(TermQ("cat"), TermQ("dog"))))
+    assertEquals(result, expected)
+  }
+
+  test("associates ANDs") {
+    val leftQs = NonEmptyList.of(TermQ("the"), TermQ("cat"))
+    val opQs = List((AND, TermQ("dog")))
+    val result = associateOps(leftQs, opQs)
+    val expected = NonEmptyList.of(TermQ("the"), AndQ(NonEmptyList.of(TermQ("cat"), TermQ("dog"))))
+    assertEquals(result, expected)
+  }
+
+  test("associates multiple ORs") {
+    val leftQs = NonEmptyList.of(TermQ("the"), TermQ("cat"))
+    val opQs = List((OR, TermQ("dog")), (OR, TermQ("fish")))
+    val result = associateOps(leftQs, opQs)
+    val expected =
+      NonEmptyList.of(TermQ("the"), OrQ(NonEmptyList.of(TermQ("cat"), TermQ("dog"), TermQ("fish"))))
+    assertEquals(result, expected)
+  }
+}
+
 class SingleSimpleQuerySuite extends munit.FunSuite {
   import Parser._
 
@@ -128,6 +158,18 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       Right(
         NonEmptyList.of(
           OrQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp")))
+        )
+      ),
+    )
+  }
+
+  test("parse three term OR query completely") {
+    val r = parseQ("derp OR lerp OR slerp")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          OrQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"), TermQ("slerp")))
         )
       ),
     )
