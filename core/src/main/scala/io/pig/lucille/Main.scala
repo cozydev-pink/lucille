@@ -96,8 +96,8 @@ object Parser {
     associateOps(h, t)
   }
 
-  val query: P[NonEmptyList[Query]] = qWithSuffixOps(simpleQ)
+  val query: P[NonEmptyList[Query]] = maybeSpace.with1 *> qWithSuffixOps(simpleQ)
 
-  def parseQ(s: String) = query.parseAll(s.trim)
+  def parseQ(s: String) = query.parseAll(s.stripTrailing)
 
 }
