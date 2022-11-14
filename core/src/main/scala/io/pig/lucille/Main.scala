@@ -21,6 +21,7 @@ import cats.parse.Rfc5234.{sp, alpha, digit}
 import cats.parse.Parser.{char => pchar}
 import cats.data.NonEmptyList
 import cats.parse.Parser0
+import cats.syntax.all._
 
 object Parser {
 
@@ -115,7 +116,8 @@ object Parser {
 
   // "  OR term OR   term$"
   val suffixOps: Parser0[List[(Op, Query)]] =
-    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ simpleQ).rep0
+    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ simpleQ)
+      .repUntil0(maybeSpace.with1 *> simpleQ)
 
   // val not = P.string("NOT")
   // def notQ(pa: P[Query]): P[Query] = (not *> pa).map(NotQ.apply)
@@ -125,7 +127,7 @@ object Parser {
       .map { case (h, t) => associateOps(h, t) }
 
   val query: P[NonEmptyList[Query]] =
-    maybeSpace.with1 *> qWithSuffixOps
+    (maybeSpace.with1 *> qWithSuffixOps).rep.map(_.flatten)
 
   def parseQ(s: String) = query.parseAll(s.stripTrailing)
 }

@@ -302,6 +302,19 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     )
   }
 
+  test("parse two term AND query followed by term") {
+    val r = parseQ("derp AND lerp slerp")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          AndQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"))),
+          TermQ("slerp"),
+        )
+      ),
+    )
+  }
+
   test("parse simple term and phrase AND query completely") {
     val r = parseQ("derp AND \"lerp slerp\"")
     assertEquals(
