@@ -265,8 +265,28 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assert(r.isLeft)
   }
 
+  test("parse 'AND' as term should fail") {
+    val r = parseQ("AND")
+    assert(r.isLeft)
+  }
+
   test("simpleQ parse term with trailing 'OR' should fail") {
     val r = simpleQ.parseAll("cat OR")
+    assert(r.isLeft)
+  }
+
+  test("simpleQ parse term with trailing 'AND' should fail") {
+    val r = simpleQ.parseAll("cat AND")
+    assert(r.isLeft)
+  }
+
+  test("simpleQ parse term with trailing 'OR' and whitespace should fail") {
+    val r = simpleQ.parseAll("cat OR ")
+    assert(r.isLeft)
+  }
+
+  test("simpleQ parse term with trailing 'AND' and whitespace should fail") {
+    val r = simpleQ.parseAll("cat AND ")
     assert(r.isLeft)
   }
 
