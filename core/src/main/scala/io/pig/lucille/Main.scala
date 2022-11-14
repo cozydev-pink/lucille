@@ -114,7 +114,10 @@ object Parser {
     }
   }
 
-  // "  OR term OR   term$"
+  // given "  OR term1 OR   term2$"
+  // parses completely
+  // given "  OR term1 OR   term2 extra$"
+  // parses until the end of 'term2', with 'extra' being left
   val suffixOps: Parser0[List[(Op, Query)]] =
     ((maybeSpace.with1 *> infixOp <* sp.rep) ~ simpleQ)
       .repUntil0(maybeSpace.with1 *> simpleQ)
@@ -122,10 +125,16 @@ object Parser {
   // val not = P.string("NOT")
   // def notQ(pa: P[Query]): P[Query] = (not *> pa).map(NotQ.apply)
 
+  // parse simple queries followed by suffix op queries
+  // "q0 q1 OR q2"
   val qWithSuffixOps: P[NonEmptyList[Query]] =
     (simpleQ.repSep(sp.rep) ~ suffixOps)
       .map { case (h, t) => associateOps(h, t) }
 
+  // parse a whole list of queries
+  // "q0 q1 OR q2 q3"
+  // we repeat so that we can parse q3
+  // the first iteration only gets "qp q1 OR q2"
   val query: P[NonEmptyList[Query]] =
     (maybeSpace.with1 *> qWithSuffixOps).rep.map(_.flatten)
 
