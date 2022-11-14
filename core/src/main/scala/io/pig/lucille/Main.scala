@@ -81,19 +81,19 @@ object Parser {
     * @return
     */
   def associateOps(q1: NonEmptyList[Query], opQs: List[(Op, Query)]): NonEmptyList[Query] = {
-    def go(acc: List[Query], op: Op, opQs: List[(Op, Query)]): List[Query] =
+    def go(acc: NonEmptyList[Query], op: Op, opQs: List[(Op, Query)]): NonEmptyList[Query] =
       // println(s"go: acc=$acc, op=$op, opQs=$opQs")
       opQs match {
         case Nil =>
           op match {
             // no more ops to pair
-            case OR => List(OrQ(NonEmptyList.fromListUnsafe(acc)))
-            case AND => List(AndQ(NonEmptyList.fromListUnsafe(acc)))
+            case OR => NonEmptyList.of(OrQ(acc))
+            case AND => NonEmptyList.of(AndQ(acc))
           }
         case opP :: tailOpP =>
           opP match {
-            case (OR, q) if op == OR => go(acc.appended(q), op, tailOpP)
-            case (AND, q) if op == AND => go(acc.appended(q), op, tailOpP)
+            case (OR, q) if op == OR => go(acc.append(q), op, tailOpP)
+            case (AND, q) if op == AND => go(acc.append(q), op, tailOpP)
             case (_, _) => ???
           }
       }
@@ -102,13 +102,11 @@ object Parser {
       case Nil => q1
       case opHead :: _ =>
         q1 match {
-          case NonEmptyList(qLeft, Nil) =>
-            // safe because we know opQs has at least one element
-            NonEmptyList.fromListUnsafe(go(qLeft :: Nil, opHead._1, opQs))
+          case NonEmptyList(_, Nil) => go(q1, opHead._1, opQs)
           case NonEmptyList(h, atLeastOneQ) =>
             // multiple queries on the left, we'll look at just the last one
             val allButLast = NonEmptyList(h, atLeastOneQ.dropRight(1))
-            allButLast ++ go(q1.last :: Nil, opHead._1, opQs)
+            allButLast.concatNel(go(NonEmptyList.of(q1.last), opHead._1, opQs))
         }
     }
   }
