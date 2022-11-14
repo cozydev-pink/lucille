@@ -49,7 +49,6 @@ object Parser {
 
   val fieldName: P[String] = alpha.rep.string
   val fieldValueSoft: P[String] = fieldName.soft <* pchar(':')
-  // Should this be a query?
   val fieldQuery: P[FieldQ] =
     (fieldValueSoft ~ termClause).map { case (f, q) => FieldQ(f, q) }
 
@@ -115,19 +114,18 @@ object Parser {
   }
 
   // "  OR term OR   term$"
-  def opSuffix(pa: P[Query]): Parser0[List[(Op, Query)]] =
-    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ pa).rep0
+  val suffixOps: Parser0[List[(Op, Query)]] =
+    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ simpleQ).rep0
 
   // val not = P.string("NOT")
   // def notQ(pa: P[Query]): P[Query] = (not *> pa).map(NotQ.apply)
 
-  def qWithSuffixOps(pa: P[Query]) = (pa.repSep(sp.rep) ~ opSuffix(pa)).map { case (h, t) =>
-    associateOps(h, t)
-  }
+  val qWithSuffixOps: P[NonEmptyList[Query]] =
+    (simpleQ.repSep(sp.rep) ~ suffixOps)
+      .map { case (h, t) => associateOps(h, t) }
 
-  val query: P[NonEmptyList[Query]] = maybeSpace.with1 *> qWithSuffixOps(simpleQ)
+  val query: P[NonEmptyList[Query]] =
+    maybeSpace.with1 *> qWithSuffixOps
 
-  // TODO fix
   def parseQ(s: String) = query.parseAll(s.stripTrailing)
-
 }
