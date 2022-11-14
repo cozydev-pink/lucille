@@ -82,7 +82,6 @@ object Parser {
     */
   def associateOps(q1: NonEmptyList[Query], opQs: List[(Op, Query)]): NonEmptyList[Query] = {
     def go(acc: NonEmptyList[Query], op: Op, opQs: List[(Op, Query)]): NonEmptyList[Query] =
-      // println(s"go: acc=$acc, op=$op, opQs=$opQs")
       opQs match {
         case Nil =>
           op match {
@@ -90,11 +89,15 @@ object Parser {
             case OR => NonEmptyList.of(OrQ(acc))
             case AND => NonEmptyList.of(AndQ(acc))
           }
-        case opP :: tailOpP =>
-          opP match {
-            case (OR, q) if op == OR => go(acc.append(q), op, tailOpP)
-            case (AND, q) if op == AND => go(acc.append(q), op, tailOpP)
-            case (_, _) => ???
+        case (nextOp, q) :: tailOpP =>
+          (op, nextOp) match {
+            case (OR, OR) => go(acc.append(q), nextOp, tailOpP)
+            case (AND, AND) => go(acc.append(q), nextOp, tailOpP)
+            case (AND, OR) =>
+              go(NonEmptyList.of(q), nextOp, tailOpP).prepend(AndQ(acc))
+            case (OR, AND) =>
+              val allButLast = NonEmptyList(acc.head, acc.tail.dropRight(1))
+              allButLast.concatNel(go(NonEmptyList.of(acc.last, q), nextOp, tailOpP))
           }
       }
 
