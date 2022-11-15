@@ -38,27 +38,35 @@ object Parser {
   val dquote = pchar('"')
   val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
   val maybeSpace: Parser0[Unit] = spaces.?.void
+  val int: P[Int] = digit.rep.string.map(_.toInt)
 
-  // Trying to fail on 'OR' quickly
+  // Term query
+  // e.g. 'cat', 'catch22'
   val reserved = Set("OR", "||", "AND", "&&", "NOT")
   val term: P[String] = P.not(P.stringIn(reserved)).with1 *> (alpha | digit).rep.string
   val termQ: P[TermQ] = term.map(TermQ.apply)
 
+  // Phrase query
+  // e.g. 'the cat jumped'
   val phrase: P[String] = (term ~ sp.?).rep.string.surroundedBy(dquote)
   val phraseQ: P[PhraseQ] = phrase.map(PhraseQ.apply)
   val termClause: P[Query] = termQ | phraseQ
 
+  // Field query
+  // e.g. 'title:cats'
   val fieldValueSoft: P[String] = term.soft <* pchar(':')
   val fieldQuery: P[FieldQ] =
     (fieldValueSoft ~ termClause).map { case (f, q) => FieldQ(f, q) }
 
-  val int: P[Int] = digit.rep.string.map(_.toInt)
-  // TODO can this be a full phrase or only a 2 word phrase?
+  // Proximity query
+  // e.g. '"cat jumped"~3', '"one two three"~2'
   val proxSoft: P[String] = phrase.soft <* pchar('~')
   val proximityQuery: P[ProximityQ] = (proxSoft ~ int).map { case (p, n) =>
     ProximityQ(p, n)
   }
 
+  // Fuzzy term
+  // e.g. 'cat~', 'cat~2'
   val fuzzySoft: P[String] = term.soft <* pchar('~')
   val fuzzyTerm: P[FuzzyTerm] = (fuzzySoft ~ int.?).map { case (q, n) =>
     FuzzyTerm(q, n)
@@ -95,6 +103,8 @@ object Parser {
             case (AND, OR) =>
               go(NonEmptyList.of(q), nextOp, tailOpP).prepend(AndQ(acc))
             case (OR, AND) =>
+              // TODO we only get away with not wrapping the `allButLast` in an OrQ
+              //  because `OR` is the default query type. This should be configurable
               val allButLast = NonEmptyList(acc.head, acc.tail.dropRight(1))
               allButLast.concatNel(go(NonEmptyList.of(acc.last, q), nextOp, tailOpP))
           }
