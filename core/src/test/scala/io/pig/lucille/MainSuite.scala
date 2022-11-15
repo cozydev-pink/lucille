@@ -302,6 +302,32 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     )
   }
 
+  test("parse term followed by two term OR query") {
+    val r = parseQ("term derp OR lerp")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          TermQ("term"),
+          OrQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"))),
+        )
+      ),
+    )
+  }
+
+  test("parse two term OR query followed by term") {
+    val r = parseQ("derp OR lerp slerp")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          OrQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"))),
+          TermQ("slerp"),
+        )
+      ),
+    )
+  }
+
   test("parse two term AND query followed by term") {
     val r = parseQ("derp AND lerp slerp")
     assertEquals(
@@ -334,6 +360,21 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       Right(
         NonEmptyList.of(
           AndQ(NonEmptyList.of(TermQ("derp"), PhraseQ("lerp slerp")))
+        )
+      ),
+    )
+  }
+
+  test("parse complex mix of AND and OR queries with trailing terms") {
+    val r = parseQ("derp AND lerp slerp orA OR orB last")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          AndQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"))),
+          TermQ("slerp"),
+          OrQ(NonEmptyList.of(TermQ("orA"), TermQ("orB"))),
+          TermQ("last"),
         )
       ),
     )
