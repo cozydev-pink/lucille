@@ -41,15 +41,14 @@ object Parser {
 
   // Trying to fail on 'OR' quickly
   val reserved = Set("OR", "||", "AND", "&&", "NOT")
-  val term: P[String] = P.not(P.stringIn(reserved)).with1 *> alpha.rep.string
+  val term: P[String] = P.not(P.stringIn(reserved)).with1 *> (alpha | digit).rep.string
   val termQ: P[TermQ] = term.map(TermQ.apply)
 
   val phrase: P[String] = (term ~ sp.?).rep.string.surroundedBy(dquote)
   val phraseQ: P[PhraseQ] = phrase.map(PhraseQ.apply)
   val termClause: P[Query] = termQ | phraseQ
 
-  val fieldName: P[String] = alpha.rep.string
-  val fieldValueSoft: P[String] = fieldName.soft <* pchar(':')
+  val fieldValueSoft: P[String] = term.soft <* pchar(':')
   val fieldQuery: P[FieldQ] =
     (fieldValueSoft ~ termClause).map { case (f, q) => FieldQ(f, q) }
 

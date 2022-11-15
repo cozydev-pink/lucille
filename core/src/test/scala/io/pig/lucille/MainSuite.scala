@@ -172,6 +172,31 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
     assertEquals(r, Right(NonEmptyList.of(FieldQ("fieldName", PhraseQ("The cat jumped")))))
   }
 
+  test("parse single term with numbers") {
+    val r = parseQ("catch22")
+    assertSingleTerm(r, TermQ("catch22"))
+  }
+
+  test("parse field query with number in name") {
+    val r = parseQ("fieldName42:cat")
+    assertSingleTerm(r, FieldQ("fieldName42", TermQ("cat")))
+  }
+
+  test("parse field query with number in term") {
+    val r = parseQ("fieldName42:cat42")
+    assertSingleTerm(r, FieldQ("fieldName42", TermQ("cat42")))
+  }
+
+  test("field names cannot be reserved suffix operators") {
+    val r = parseQ("AND:cat")
+    assert(r.isLeft)
+  }
+
+  test("field names cannot be quoted") {
+    val r = parseQ("\"AND\":cat")
+    assert(r.isLeft)
+  }
+
 }
 
 class MultiSimpleQuerySuite extends munit.FunSuite {
