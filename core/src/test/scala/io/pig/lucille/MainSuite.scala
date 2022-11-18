@@ -432,7 +432,7 @@ class GroupQuerySuite extends munit.FunSuite {
     )
   }
 
-  test("parse multiple terms with lots of spaces in a group".fail) {
+  test("parse multiple terms with trailing spaces in a group".fail) {
     val r = parseQ("(The cat   jumped   )")
     assertEquals(
       r,
@@ -442,12 +442,70 @@ class GroupQuerySuite extends munit.FunSuite {
     )
   }
 
-  test("parse multiple terms in a group".fail) {
+  test("parse field query AND group query") {
     val r = parseQ("title:test AND (pass OR fail)")
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+        NonEmptyList.of(
+          AndQ(
+            NonEmptyList.of(
+              FieldQ("title", TermQ("test")),
+              Group(
+                NonEmptyList.of(
+                  OrQ(NonEmptyList.of(TermQ("pass"), TermQ("fail")))
+                )
+              ),
+            )
+          )
+        )
+      ),
+    )
+  }
+
+  test("parse nested group query with trailing term") {
+    val r = parseQ("(title:test AND (pass OR fail)) extra")
+    val gq = AndQ(
+      NonEmptyList.of(
+        FieldQ("title", TermQ("test")),
+        Group(
+          NonEmptyList.of(
+            OrQ(NonEmptyList.of(TermQ("pass"), TermQ("fail")))
+          )
+        ),
+      )
+    )
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(Group(NonEmptyList.of(gq)), TermQ("extra"))
+      ),
+    )
+  }
+
+  test("parse nested group query AND'd with a phrase query") {
+    val r = parseQ("(title:test AND (pass OR fail)) AND \"extra phrase\"")
+    val gq = AndQ(
+      NonEmptyList.of(
+        FieldQ("title", TermQ("test")),
+        Group(
+          NonEmptyList.of(
+            OrQ(NonEmptyList.of(TermQ("pass"), TermQ("fail")))
+          )
+        ),
+      )
+    )
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          AndQ(
+            NonEmptyList.of(
+              Group(NonEmptyList.of(gq)),
+              PhraseQ("extra phrase"),
+            )
+          )
+        )
       ),
     )
   }

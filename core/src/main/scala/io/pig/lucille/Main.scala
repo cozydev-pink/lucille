@@ -121,6 +121,18 @@ object Parser {
     }
   }
 
+  def grouped(query: P[Query]): P[Group] =
+    nonGrouped(query)
+      .between(P.char('('), P.char(')'))
+      .map(Group.apply)
+
+  val recursiveQ: P[Query] =
+    P.recursive[Query](recurse =>
+      P.oneOf(
+        fieldQuery :: proximityQuery :: fuzzyTerm :: termQ :: phraseQ :: grouped(recurse) :: Nil
+      )
+    )
+
   val simpleQ: P[Query] =
     P.oneOf(fieldQuery :: proximityQuery :: fuzzyTerm :: termQ :: phraseQ :: Nil)
 
@@ -148,12 +160,7 @@ object Parser {
   def nonGrouped(query: P[Query]): P[NonEmptyList[Query]] =
     (maybeSpace.with1 *> qWithSuffixOps(query)).rep.map(_.flatten)
 
-  def grouped(query: P[Query]): P[NonEmptyList[Group]] =
-    nonGrouped(query)
-      .between(P.char('('), P.char(')'))
-      .map(q => NonEmptyList.of(Group(q)))
-
-  val fullQuery = P.oneOf(nonGrouped(simpleQ) :: grouped(simpleQ) :: Nil)
+  val fullQuery = nonGrouped(recursiveQ)
 
   // TODO we need to deal with the trailing whitespace now that we support groups
   def parseQ(s: String) = fullQuery.parseAll(s.stripTrailing)
