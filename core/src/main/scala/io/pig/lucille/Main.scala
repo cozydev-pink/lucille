@@ -34,6 +34,7 @@ object Parser {
   final case class OrQ(qs: NonEmptyList[Query]) extends Query
   final case class AndQ(qs: NonEmptyList[Query]) extends Query
   final case class NotQ(q: Query) extends Query
+  final case class Group(qs: NonEmptyList[Query]) extends Query
 
   val dquote = pchar('"')
   val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
@@ -144,8 +145,16 @@ object Parser {
   // "q0 q1 OR q2 q3"
   // we repeat so that we can parse q3
   // the first iteration only gets "qp q1 OR q2"
-  val query: P[NonEmptyList[Query]] =
+  val nonGrouped: P[NonEmptyList[Query]] =
     (maybeSpace.with1 *> qWithSuffixOps).rep.map(_.flatten)
 
+  val grouped: P[NonEmptyList[Group]] =
+    nonGrouped
+      .between(P.char('('), P.char(')'))
+      .map(q => NonEmptyList.of(Group(q)))
+
+  val query = P.oneOf(nonGrouped :: grouped :: Nil)
+
+  // TODO we need to deal with the trailing whitespace now that we support groups
   def parseQ(s: String) = query.parseAll(s.stripTrailing)
 }

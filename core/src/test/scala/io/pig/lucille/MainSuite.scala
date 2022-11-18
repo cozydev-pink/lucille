@@ -418,3 +418,37 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     )
   }
 }
+
+class GroupQuerySuite extends munit.FunSuite {
+  import Parser._
+
+  test("parse multiple terms in a group") {
+    val r = parseQ("(The cat jumped)")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(Group(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+      ),
+    )
+  }
+
+  test("parse multiple terms with lots of spaces in a group".fail) {
+    val r = parseQ("(The cat   jumped   )")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(Group(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+      ),
+    )
+  }
+
+  test("parse multiple terms in a group".fail) {
+    val r = parseQ("title:test AND (pass OR fail)")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(Group(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+      ),
+    )
+  }
+}
