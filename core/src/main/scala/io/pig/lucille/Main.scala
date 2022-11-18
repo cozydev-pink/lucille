@@ -73,9 +73,6 @@ object Parser {
     FuzzyTerm(q, n)
   }
 
-  val simpleQ: P[Query] =
-    P.oneOf(fieldQuery :: proximityQuery :: fuzzyTerm :: termQ :: phraseQ :: Nil)
-
   sealed trait Op extends Product with Serializable
   case object OR extends Op
   case object AND extends Op
@@ -124,37 +121,40 @@ object Parser {
     }
   }
 
+  val simpleQ: P[Query] =
+    P.oneOf(fieldQuery :: proximityQuery :: fuzzyTerm :: termQ :: phraseQ :: Nil)
+
   // given "  OR term1 OR   term2$"
   // parses completely
   // given "  OR term1 OR   term2 extra$"
   // parses until the end of 'term2', with 'extra' being left
-  val suffixOps: Parser0[List[(Op, Query)]] =
-    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ simpleQ)
-      .repUntil0(maybeSpace.with1 *> simpleQ)
+  def suffixOps(query: P[Query]): Parser0[List[(Op, Query)]] =
+    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ query)
+      .repUntil0(maybeSpace.with1 *> query)
 
   // val not = P.string("NOT")
   // def notQ(pa: P[Query]): P[Query] = (not *> pa).map(NotQ.apply)
 
   // parse simple queries followed by suffix op queries
   // "q0 q1 OR q2"
-  val qWithSuffixOps: P[NonEmptyList[Query]] =
-    (simpleQ.repSep(sp.rep) ~ suffixOps)
+  def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
+    (query.repSep(sp.rep) ~ suffixOps(query))
       .map { case (h, t) => associateOps(h, t) }
 
   // parse a whole list of queries
   // "q0 q1 OR q2 q3"
   // we repeat so that we can parse q3
   // the first iteration only gets "qp q1 OR q2"
-  val nonGrouped: P[NonEmptyList[Query]] =
-    (maybeSpace.with1 *> qWithSuffixOps).rep.map(_.flatten)
+  def nonGrouped(query: P[Query]): P[NonEmptyList[Query]] =
+    (maybeSpace.with1 *> qWithSuffixOps(query)).rep.map(_.flatten)
 
-  val grouped: P[NonEmptyList[Group]] =
-    nonGrouped
+  def grouped(query: P[Query]): P[NonEmptyList[Group]] =
+    nonGrouped(query)
       .between(P.char('('), P.char(')'))
       .map(q => NonEmptyList.of(Group(q)))
 
-  val query = P.oneOf(nonGrouped :: grouped :: Nil)
+  val fullQuery = P.oneOf(nonGrouped(simpleQ) :: grouped(simpleQ) :: Nil)
 
   // TODO we need to deal with the trailing whitespace now that we support groups
-  def parseQ(s: String) = query.parseAll(s.stripTrailing)
+  def parseQ(s: String) = fullQuery.parseAll(s.stripTrailing)
 }
