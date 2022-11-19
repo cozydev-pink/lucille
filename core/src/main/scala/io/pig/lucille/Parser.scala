@@ -24,20 +24,7 @@ import cats.parse.Parser0
 import cats.syntax.all._
 
 object Parser {
-
-  sealed trait Query extends Product with Serializable
-  final case class TermQ(q: String) extends Query
-  final case class PhraseQ(q: String) extends Query
-  final case class FieldQ(field: String, q: Query) extends Query
-  final case class ProximityQ(q: String, num: Int) extends Query
-  final case class PrefixTerm(q: String) extends Query
-  final case class FuzzyTerm(q: String, num: Option[Int]) extends Query
-  final case class OrQ(qs: NonEmptyList[Query]) extends Query
-  final case class AndQ(qs: NonEmptyList[Query]) extends Query
-  final case class NotQ(q: Query) extends Query
-  final case class Group(qs: NonEmptyList[Query]) extends Query
-  final case class UnaryPlus(q: Query) extends Query
-  final case class UnaryMinus(q: Query) extends Query
+  import Query._
 
   val dquote = pchar('"')
   val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
@@ -75,53 +62,9 @@ object Parser {
     (term.soft <* P.char('*'))
       .map(PrefixTerm.apply)
 
-  sealed trait Op extends Product with Serializable
-  case object OR extends Op
-  case object AND extends Op
-
-  val or = (P.string("OR") | P.string("||")).as(OR)
-  val and = (P.string("AND") | P.string("&&")).as(AND)
+  val or = (P.string("OR") | P.string("||")).as(Op.OR)
+  val and = (P.string("AND") | P.string("&&")).as(Op.AND)
   val infixOp = or | and
-
-  /** @param q1 queries parsed so far, the last one could be part of a suffixOp
-    * @param qs suffixOp and query pairs
-    * @return
-    */
-  def associateOps(q1: NonEmptyList[Query], opQs: List[(Op, Query)]): NonEmptyList[Query] = {
-    def go(acc: NonEmptyList[Query], op: Op, opQs: List[(Op, Query)]): NonEmptyList[Query] =
-      opQs match {
-        case Nil =>
-          op match {
-            // no more ops to pair
-            case OR => NonEmptyList.of(OrQ(acc))
-            case AND => NonEmptyList.of(AndQ(acc))
-          }
-        case (nextOp, q) :: tailOpP =>
-          (op, nextOp) match {
-            case (OR, OR) => go(acc.append(q), nextOp, tailOpP)
-            case (AND, AND) => go(acc.append(q), nextOp, tailOpP)
-            case (AND, OR) =>
-              go(NonEmptyList.of(q), nextOp, tailOpP).prepend(AndQ(acc))
-            case (OR, AND) =>
-              // TODO we only get away with not wrapping the `allButLast` in an OrQ
-              //  because `OR` is the default query type. This should be configurable
-              val allButLast = NonEmptyList(acc.head, acc.tail.dropRight(1))
-              allButLast.concatNel(go(NonEmptyList.of(acc.last, q), nextOp, tailOpP))
-          }
-      }
-
-    opQs match {
-      case Nil => q1
-      case opHead :: _ =>
-        q1 match {
-          case NonEmptyList(_, Nil) => go(q1, opHead._1, opQs)
-          case NonEmptyList(h, atLeastOneQ) =>
-            // multiple queries on the left, we'll look at just the last one
-            val allButLast = NonEmptyList(h, atLeastOneQ.dropRight(1))
-            allButLast.concatNel(go(NonEmptyList.of(q1.last), opHead._1, opQs))
-        }
-    }
-  }
 
   // given "  OR term1 OR   term2$"
   // parses completely
@@ -135,7 +78,7 @@ object Parser {
   // "q0 q1 OR q2"
   def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
     (query.repSep(sp.rep) ~ suffixOps(query))
-      .map { case (h, t) => associateOps(h, t) }
+      .map { case (h, t) => Op.associateOps(h, t) }
 
   // parse a whole list of queries
   // "q0 q1 OR q2 q3"
