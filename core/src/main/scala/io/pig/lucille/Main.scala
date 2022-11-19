@@ -36,6 +36,8 @@ object Parser {
   final case class AndQ(qs: NonEmptyList[Query]) extends Query
   final case class NotQ(q: Query) extends Query
   final case class Group(qs: NonEmptyList[Query]) extends Query
+  final case class UnaryPlus(q: Query) extends Query
+  final case class UnaryMinus(q: Query) extends Query
 
   val dquote = pchar('"')
   val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
@@ -44,7 +46,7 @@ object Parser {
 
   // Term query
   // e.g. 'cat', 'catch22'
-  val reserved = Set("OR", "||", "AND", "&&", "NOT")
+  val reserved = Set("OR", "||", "AND", "&&", "NOT", "+", "-")
   val term: P[String] = P.not(P.stringIn(reserved)).with1 *> (alpha | digit).rep.string
   val termQ: P[TermQ] = term.map(TermQ.apply)
 
@@ -160,12 +162,24 @@ object Parser {
   def fieldQuery(query: P[Query]): P[FieldQ] =
     (fieldValueSoft ~ query).map { case (f, q) => FieldQ(f, q) }
 
+  // Unary Plus query
+  // e.g. '+cat', '+(cats AND dogs)'
+  def unaryPlus(query: P[Query]): P[UnaryPlus] =
+    P.char('+') *> query.map(UnaryPlus.apply)
+
+  // Unary Minus query
+  // e.g. 'cat', '-(cats AND dogs)'
+  def unaryMinus(query: P[Query]): P[UnaryMinus] =
+    P.char('-') *> query.map(UnaryMinus.apply)
+
   // Tie compound queries together recursively
   // Order is very important here
   // prefixT before termQ
   val recursiveQ: P[Query] = P.recursive[Query](r =>
     P.oneOf(
       List(
+        unaryPlus(r),
+        unaryMinus(r),
         notQ(r),
         fieldQuery(r),
         proximityQ,

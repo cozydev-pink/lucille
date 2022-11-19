@@ -164,9 +164,21 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     )
   }
 
-  test("title:(+test +\"result unknown\")".fail) {
+  test("title:(+test +\"result unknown\")") {
     val r = parseQ("title:(+test +\"result unknown\")")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          FieldQ(
+            "title",
+            Group(
+              NonEmptyList.of(UnaryPlus(TermQ("test")), UnaryPlus(PhraseQ("result unknown")))
+            ),
+          )
+        )
+      ),
+    )
   }
 
   test("name:[Jones TO Smith]".fail) {
