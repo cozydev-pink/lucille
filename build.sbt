@@ -33,7 +33,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform)
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-parse" % "0.3.8",
       "org.typelevel" %%% "cats-core" % "2.9.0",
-      "org.scalameta" %%% "munit" % "1.0.0-M6" % Test,
+      "org.scalameta" %%% "munit" % "1.0.0-M7" % Test,
     ),
   )
 
