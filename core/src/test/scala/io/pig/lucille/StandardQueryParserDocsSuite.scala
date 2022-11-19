@@ -52,9 +52,14 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     )
   }
 
-  test("tes*".fail) {
+  test("tes*") {
     val r = parseQ("tes*")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(PrefixTerm("tes"))
+      ),
+    )
   }
 
   test("/.est(s|ing)/".fail) {
@@ -121,9 +126,30 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     )
   }
 
-  test("title:test AND (pass* OR fail*)".fail) {
+  test("title:test AND (pass* OR fail*)") {
     val r = parseQ("title:test AND (pass* OR fail*)")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          AndQ(
+            NonEmptyList.of(
+              FieldQ("title", TermQ("test")),
+              Group(
+                NonEmptyList.of(
+                  OrQ(
+                    NonEmptyList.of(
+                      PrefixTerm("pass"),
+                      PrefixTerm("fail"),
+                    )
+                  )
+                )
+              ),
+            )
+          )
+        )
+      ),
+    )
   }
 
   test("title:(pass fail skip)") {

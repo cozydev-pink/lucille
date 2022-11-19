@@ -30,6 +30,7 @@ object Parser {
   final case class PhraseQ(q: String) extends Query
   final case class FieldQ(field: String, q: Query) extends Query
   final case class ProximityQ(q: String, num: Int) extends Query
+  final case class PrefixTerm(q: String) extends Query
   final case class FuzzyTerm(q: String, num: Option[Int]) extends Query
   final case class OrQ(qs: NonEmptyList[Query]) extends Query
   final case class AndQ(qs: NonEmptyList[Query]) extends Query
@@ -62,9 +63,15 @@ object Parser {
   // Fuzzy term
   // e.g. 'cat~', 'cat~2'
   val fuzzySoft: P[String] = term.soft <* pchar('~')
-  val fuzzyTerm: P[FuzzyTerm] = (fuzzySoft ~ int.?).map { case (q, n) =>
+  val fuzzyT: P[FuzzyTerm] = (fuzzySoft ~ int.?).map { case (q, n) =>
     FuzzyTerm(q, n)
   }
+
+  // Prefix term
+  // e.g. 'jump*'
+  val prefixT: P[PrefixTerm] =
+    (term.soft <* P.char('*'))
+      .map(PrefixTerm.apply)
 
   sealed trait Op extends Product with Serializable
   case object OR extends Op
@@ -155,12 +162,21 @@ object Parser {
 
   // Tie compound queries together recursively
   // Order is very important here
-  val recursiveQ: P[Query] =
-    P.recursive[Query](r =>
-      P.oneOf(
-        notQ(r) :: fieldQuery(r) :: proximityQ :: fuzzyTerm :: termQ :: phraseQ :: groupQ(r) :: Nil
+  // prefixT before termQ
+  val recursiveQ: P[Query] = P.recursive[Query](r =>
+    P.oneOf(
+      List(
+        notQ(r),
+        fieldQuery(r),
+        proximityQ,
+        fuzzyT,
+        prefixT,
+        termQ,
+        phraseQ,
+        groupQ(r),
       )
     )
+  )
 
   // One or more queries implicitly grouped together in a list
   val fullQuery = nonGrouped(recursiveQ)
