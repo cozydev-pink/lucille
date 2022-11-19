@@ -133,9 +133,6 @@ object Parser {
       )
     )
 
-  val simpleQ: P[Query] =
-    P.oneOf(fieldQuery :: proximityQuery :: fuzzyTerm :: termQ :: phraseQ :: Nil)
-
   // given "  OR term1 OR   term2$"
   // parses completely
   // given "  OR term1 OR   term2 extra$"
