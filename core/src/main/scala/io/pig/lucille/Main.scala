@@ -51,12 +51,11 @@ object Parser {
   // e.g. 'the cat jumped'
   val phrase: P[String] = (term ~ sp.?).rep.string.surroundedBy(dquote)
   val phraseQ: P[PhraseQ] = phrase.map(PhraseQ.apply)
-  val termClause: P[Query] = termQ | phraseQ
 
   // Proximity query
   // e.g. '"cat jumped"~3', '"one two three"~2'
   val proxSoft: P[String] = phrase.soft <* pchar('~')
-  val proximityQuery: P[ProximityQ] = (proxSoft ~ int).map { case (p, n) =>
+  val proximityQ: P[ProximityQ] = (proxSoft ~ int).map { case (p, n) =>
     ProximityQ(p, n)
   }
 
@@ -115,24 +114,6 @@ object Parser {
     }
   }
 
-  def grouped(query: P[Query]): P[Group] =
-    nonGrouped(query)
-      .between(P.char('('), P.char(')'))
-      .map(Group.apply)
-
-  // Field query
-  // e.g. 'title:cats'
-  val fieldValueSoft: P[String] = term.soft <* pchar(':')
-  def fieldQuery(query: P[Query]): P[FieldQ] =
-    (fieldValueSoft ~ query).map { case (f, q) => FieldQ(f, q) }
-
-  val recursiveQ: P[Query] =
-    P.recursive[Query](r =>
-      P.oneOf(
-        fieldQuery(r) :: proximityQuery :: fuzzyTerm :: termQ :: phraseQ :: grouped(r) :: Nil
-      )
-    )
-
   // given "  OR term1 OR   term2$"
   // parses completely
   // given "  OR term1 OR   term2 extra$"
@@ -157,6 +138,29 @@ object Parser {
   def nonGrouped(query: P[Query]): P[NonEmptyList[Query]] =
     (maybeSpace.with1 *> qWithSuffixOps(query)).rep.map(_.flatten)
 
+  // Group query
+  // e.g. '(cats AND dogs)'
+  def groupQ(query: P[Query]): P[Group] =
+    nonGrouped(query)
+      .between(P.char('('), P.char(')'))
+      .map(Group.apply)
+
+  // Field query
+  // e.g. 'title:cats', 'author:"Silly Goose"', 'title:(cats AND dogs)'
+  val fieldValueSoft: P[String] = term.soft <* pchar(':')
+  def fieldQuery(query: P[Query]): P[FieldQ] =
+    (fieldValueSoft ~ query).map { case (f, q) => FieldQ(f, q) }
+
+  // Tie compound queries together recursively
+  // Order is very important here
+  val recursiveQ: P[Query] =
+    P.recursive[Query](r =>
+      P.oneOf(
+        fieldQuery(r) :: proximityQ :: fuzzyTerm :: termQ :: phraseQ :: groupQ(r) :: Nil
+      )
+    )
+
+  // One or more queries implicitly grouped together in a list
   val fullQuery = nonGrouped(recursiveQ)
 
   // TODO we need to deal with the trailing whitespace now that we support groups
