@@ -122,9 +122,6 @@ object Parser {
     ((maybeSpace.with1 *> infixOp <* sp.rep) ~ query)
       .repUntil0(maybeSpace.with1 *> query)
 
-  // val not = P.string("NOT")
-  // def notQ(pa: P[Query]): P[Query] = (not *> pa).map(NotQ.apply)
-
   // parse simple queries followed by suffix op queries
   // "q0 q1 OR q2"
   def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
@@ -137,6 +134,11 @@ object Parser {
   // the first iteration only gets "qp q1 OR q2"
   def nonGrouped(query: P[Query]): P[NonEmptyList[Query]] =
     (maybeSpace.with1 *> qWithSuffixOps(query)).rep.map(_.flatten)
+
+  // Not query
+  // e.g. 'animals NOT (cats AND dogs)'
+  def notQ(query: P[Query]): P[Query] =
+    ((P.string("NOT").soft ~ maybeSpace) *> query).map(NotQ.apply)
 
   // Group query
   // e.g. '(cats AND dogs)'
@@ -156,7 +158,7 @@ object Parser {
   val recursiveQ: P[Query] =
     P.recursive[Query](r =>
       P.oneOf(
-        fieldQuery(r) :: proximityQ :: fuzzyTerm :: termQ :: phraseQ :: groupQ(r) :: Nil
+        notQ(r) :: fieldQuery(r) :: proximityQ :: fuzzyTerm :: termQ :: phraseQ :: groupQ(r) :: Nil
       )
     )
 

@@ -405,8 +405,19 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     )
   }
 
-  // TODO Confirm and possibly fix
-  test("parse NOT query completely fails".fail) {
+  test("parse NOT query") {
+    val r = parseQ("NOT derp")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          NotQ(TermQ("derp"))
+        )
+      ),
+    )
+  }
+
+  test("parse NOT query inside AND query") {
     val r = parseQ("derp AND NOT lerp")
     assertEquals(
       r,
@@ -438,6 +449,21 @@ class GroupQuerySuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(Group(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+      ),
+    )
+  }
+
+  test("parse NOT of group query") {
+    val r = parseQ("animals NOT (cats AND dogs)")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          TermQ("animals"),
+          NotQ(
+            Group(NonEmptyList.of(AndQ(NonEmptyList.of(TermQ("cats"), TermQ("dogs")))))
+          ),
+        )
       ),
     )
   }
