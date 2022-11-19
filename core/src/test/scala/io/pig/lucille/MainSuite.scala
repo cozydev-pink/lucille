@@ -442,6 +442,21 @@ class GroupQuerySuite extends munit.FunSuite {
     )
   }
 
+  test("parse field query with group query") {
+    val r = parseQ("title:(cats AND dogs)")
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          FieldQ(
+            "title",
+            Group(NonEmptyList.of(AndQ(NonEmptyList.of(TermQ("cats"), TermQ("dogs"))))),
+          )
+        )
+      ),
+    )
+  }
+
   test("parse field query AND group query") {
     val r = parseQ("title:test AND (pass OR fail)")
     assertEquals(

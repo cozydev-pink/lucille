@@ -53,12 +53,6 @@ object Parser {
   val phraseQ: P[PhraseQ] = phrase.map(PhraseQ.apply)
   val termClause: P[Query] = termQ | phraseQ
 
-  // Field query
-  // e.g. 'title:cats'
-  val fieldValueSoft: P[String] = term.soft <* pchar(':')
-  val fieldQuery: P[FieldQ] =
-    (fieldValueSoft ~ termClause).map { case (f, q) => FieldQ(f, q) }
-
   // Proximity query
   // e.g. '"cat jumped"~3', '"one two three"~2'
   val proxSoft: P[String] = phrase.soft <* pchar('~')
@@ -126,10 +120,16 @@ object Parser {
       .between(P.char('('), P.char(')'))
       .map(Group.apply)
 
+  // Field query
+  // e.g. 'title:cats'
+  val fieldValueSoft: P[String] = term.soft <* pchar(':')
+  def fieldQuery(query: P[Query]): P[FieldQ] =
+    (fieldValueSoft ~ query).map { case (f, q) => FieldQ(f, q) }
+
   val recursiveQ: P[Query] =
-    P.recursive[Query](recurse =>
+    P.recursive[Query](r =>
       P.oneOf(
-        fieldQuery :: proximityQuery :: fuzzyTerm :: termQ :: phraseQ :: grouped(recurse) :: Nil
+        fieldQuery(r) :: proximityQuery :: fuzzyTerm :: termQ :: phraseQ :: grouped(r) :: Nil
       )
     )
 
