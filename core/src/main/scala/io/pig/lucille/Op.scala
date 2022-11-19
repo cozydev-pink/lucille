@@ -21,8 +21,8 @@ import cats.data.NonEmptyList
 sealed trait Op extends Product with Serializable
 
 object Op {
-  final case object OR extends Op
-  final case object AND extends Op
+  case object OR extends Op
+  case object AND extends Op
 
   /** @param q1 queries parsed so far, the last one could be part of a suffixOp
     * @param qs suffixOp and query pairs
