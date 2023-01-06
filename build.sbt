@@ -16,6 +16,9 @@ ThisBuild / tlSonatypeUseLegacyHost := false
 // publish website from this branch
 ThisBuild / tlSitePublishBranch := Some("main")
 
+// publish snapshots from main branch
+ThisBuild / tlCiReleaseBranches := Seq("main")
+
 // use JDK 11
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11"))
 
