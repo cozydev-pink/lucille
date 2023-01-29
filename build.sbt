@@ -1,8 +1,8 @@
 // https://typelevel.org/sbt-typelevel/faq.html#what-is-a-base-version-anyway
 ThisBuild / tlBaseVersion := "0.0" // your current series x.y
 
-ThisBuild / organization := "io.pig"
-ThisBuild / organizationName := "Pig.io"
+ThisBuild / organization := "pink.cozydev"
+ThisBuild / organizationName := "Cozydev.pink"
 ThisBuild / startYear := Some(2022)
 ThisBuild / licenses := Seq(License.Apache2)
 ThisBuild / developers := List(
