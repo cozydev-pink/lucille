@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Pig.io
+ * Copyright 2022 CozyDev
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.pig.lucille
+package pink.cozydev.lucille
 import cats.data.NonEmptyList
 import Query._
 import Op._
