@@ -33,4 +33,10 @@ object Query {
   final case class Group(qs: NonEmptyList[Query]) extends Query
   final case class UnaryPlus(q: Query) extends Query
   final case class UnaryMinus(q: Query) extends Query
+  final case class RangeQ[A](
+      lower: Option[A],
+      upper: Option[A],
+      lowerInc: Boolean,
+      upperInc: Boolean,
+  ) extends Query
 }

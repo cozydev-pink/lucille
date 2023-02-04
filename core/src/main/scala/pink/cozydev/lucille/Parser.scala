@@ -115,6 +115,21 @@ object Parser {
   def unaryMinus(query: P[Query]): P[UnaryMinus] =
     P.char('-') *> query.map(UnaryMinus.apply)
 
+  def rangeQuery(s: String) = {
+    val inclLower =
+      P.charIn('{', '[').map(lowerBound => lowerBound == '[')
+    val lower = P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char('.')).rep
+    val to = P.string("TO")
+    val upper = P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char('.')).rep
+    val inclUpper = P.charIn('}', ']').map(upperBound => upperBound == ']')
+    val wholeThingWithSpaces =
+      (inclLower ~ maybeSpace ~ lower ~ spaces ~ to ~ spaces ~ upper ~ maybeSpace ~ inclUpper).map {
+        case ((((((((lb, _), l), _), _), _), u), _), ub) =>
+          RangeQ(Some(l), Some(u), lb, ub)
+      }
+    wholeThingWithSpaces.parse(s)
+  }
+
   // Tie compound queries together recursively
   // Order is very important here
   // prefixT before termQ
