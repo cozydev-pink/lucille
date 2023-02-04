@@ -117,16 +117,16 @@ object Parser {
 
   def rangeQuery(s: String) = {
     val inclLower =
-      P.charIn('{', '[').map(lowerBound => lowerBound == '[')
+      P.charIn('{', '[').map(lowerBound => lowerBound == '[') <* maybeSpace
     val lower = P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char('.')).rep
-    val to = P.string("TO")
+    val to = spaces *> P.string("TO") <* spaces
     val upper = P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char('.')).rep
-    val inclUpper = P.charIn('}', ']').map(upperBound => upperBound == ']')
+    val inclUpper = maybeSpace *> P.charIn('}', ']').map(upperBound => upperBound == ']')
     val wholeThingWithSpaces =
-      (inclLower ~ maybeSpace ~ lower ~ spaces ~ to ~ spaces ~ upper ~ maybeSpace ~ inclUpper).map {
-        case ((((((((lb, _), l), _), _), _), u), _), ub) =>
+      (inclLower ~ lower ~ to ~ upper ~ inclUpper)
+        .map { case ((((lb, l), _), u), ub) =>
           RangeQ(Some(l), Some(u), lb, ub)
-      }
+        }
     wholeThingWithSpaces.parse(s)
   }
 
