@@ -182,19 +182,28 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     )
   }
 
-  test("name:[Jones TO Smith]".fail) {
+  test("name:[Jones TO Smith]") {
     val r = parseQ("name:[Jones TO Smith]")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(NonEmptyList.of(FieldQ("name", RangeQ(Some("Jones"), Some("Smith"), true, true)))),
+    )
   }
 
-  test("score:{2.5 TO 7.3}".fail) {
+  test("score:{2.5 TO 7.3}") {
     val r = parseQ("score:{2.5 TO 7.3}")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(NonEmptyList.of(FieldQ("score", RangeQ(Some("2.5"), Some("7.3"), false, false)))),
+    )
   }
 
-  test("score:{2.5 TO *]".fail) {
+  test("score:{2.5 TO *]") {
     val r = parseQ("score:{2.5 TO *]")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(NonEmptyList.of(FieldQ("score", RangeQ(Some("2.5"), None, false, true)))),
+    )
   }
 
   test("jones^2 OR smith^0.5".fail) {

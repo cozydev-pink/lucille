@@ -115,20 +115,20 @@ object Parser {
   def unaryMinus(query: P[Query]): P[UnaryMinus] =
     P.char('-') *> query.map(UnaryMinus.apply)
 
-  def rangeQuery(s: String) = {
+  def rangeQuery: P[RangeQ[_]] = {
     val inclLower =
       P.charIn('{', '[').map(lowerBound => lowerBound == '[') <* maybeSpace
     val bound =
-      P.char('*').as(None) | P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char('.')).rep
+      P.char('*').as(None) | P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char(
+        '.'
+      )).rep.string
         .map(Some(_))
     val to = spaces *> P.string("TO") <* spaces
     val inclUpper = maybeSpace *> P.charIn('}', ']').map(upperBound => upperBound == ']')
-    val wholeThing =
-      (inclLower ~ bound ~ to ~ bound ~ inclUpper)
-        .map { case ((((lb, l), _), u), ub) =>
-          RangeQ(l, u, lb, ub)
-        }
-    wholeThing.parse(s)
+    (inclLower ~ bound ~ to ~ bound ~ inclUpper)
+      .map { case ((((lb, l), _), u), ub) =>
+        RangeQ(l, u, lb, ub)
+      }
   }
 
   // Tie compound queries together recursively
@@ -142,6 +142,7 @@ object Parser {
         notQ(r),
         fieldQuery(r),
         proximityQ,
+        rangeQuery,
         fuzzyT,
         prefixT,
         termQ,
