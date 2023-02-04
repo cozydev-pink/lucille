@@ -118,14 +118,15 @@ object Parser {
   def rangeQuery(s: String) = {
     val inclLower =
       P.charIn('{', '[').map(lowerBound => lowerBound == '[') <* maybeSpace
-    val lower = P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char('.')).rep
+    val bound =
+      P.char('*').as(None) | P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char('.')).rep
+        .map(Some(_))
     val to = spaces *> P.string("TO") <* spaces
-    val upper = P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char('.')).rep
     val inclUpper = maybeSpace *> P.charIn('}', ']').map(upperBound => upperBound == ']')
     val wholeThingWithSpaces =
-      (inclLower ~ lower ~ to ~ upper ~ inclUpper)
+      (inclLower ~ bound ~ to ~ bound ~ inclUpper)
         .map { case ((((lb, l), _), u), ub) =>
-          RangeQ(Some(l), Some(u), lb, ub)
+          RangeQ(l, u, lb, ub)
         }
     wholeThingWithSpaces.parse(s)
   }
