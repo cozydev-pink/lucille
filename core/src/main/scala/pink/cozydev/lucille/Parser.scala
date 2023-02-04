@@ -123,12 +123,12 @@ object Parser {
         .map(Some(_))
     val to = spaces *> P.string("TO") <* spaces
     val inclUpper = maybeSpace *> P.charIn('}', ']').map(upperBound => upperBound == ']')
-    val wholeThingWithSpaces =
+    val wholeThing =
       (inclLower ~ bound ~ to ~ bound ~ inclUpper)
         .map { case ((((lb, l), _), u), ub) =>
           RangeQ(l, u, lb, ub)
         }
-    wholeThingWithSpaces.parse(s)
+    wholeThing.parse(s)
   }
 
   // Tie compound queries together recursively
