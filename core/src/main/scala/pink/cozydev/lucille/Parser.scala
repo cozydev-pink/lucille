@@ -115,6 +115,23 @@ object Parser {
   def unaryMinus(query: P[Query]): P[UnaryMinus] =
     P.char('-') *> query.map(UnaryMinus.apply)
 
+  // Range query
+  // e.g. '{cats TO dogs}', '[1 TO *}'
+  def rangeQuery: P[RangeQ] = {
+    val inclLower = P.charIn('{', '[').map(lowerBound => lowerBound == '[') <* maybeSpace
+    val inclUpper = maybeSpace *> P.charIn('}', ']').map(upperBound => upperBound == ']')
+    val boundValue =
+      P.char('*').as(None) | P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char(
+        '.'
+      )).rep.string
+        .map(Some(_))
+    val to = spaces *> P.string("TO") <* spaces
+    (inclLower ~ boundValue ~ to ~ boundValue ~ inclUpper)
+      .map { case ((((il, l), _), u), iu) =>
+        RangeQ(l, u, il, iu)
+      }
+  }
+
   // Tie compound queries together recursively
   // Order is very important here
   // prefixT before termQ
@@ -126,6 +143,7 @@ object Parser {
         notQ(r),
         fieldQuery(r),
         proximityQ,
+        rangeQuery,
         fuzzyT,
         prefixT,
         termQ,
