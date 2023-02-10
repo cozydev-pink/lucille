@@ -5,6 +5,9 @@ boot/
 lib_managed/
 src_managed/
 
+# scala-cli
+.scala-build/
+
 # vim
 *.sw?
 
