@@ -48,4 +48,9 @@ class PunctuationSuite extends munit.FunSuite {
     assertSingleQ(r, TermQ("first.last@email.com"))
   }
 
+  test("parse fieldQ with phraseQ with dash") {
+    val r = parseQ("name:\"cats-effect\"")
+    assertSingleQ(r, FieldQ("name", PhraseQ("cats-effect")))
+  }
+
 }
