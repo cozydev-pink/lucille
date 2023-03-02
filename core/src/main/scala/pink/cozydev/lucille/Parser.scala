@@ -29,12 +29,17 @@ object Parser {
   val dquote = pchar('"')
   val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
   val maybeSpace: Parser0[Unit] = spaces.?.void
-  val int: P[Int] = digit.rep.string.map(_.toInt)
+  val int: P[Int] = (digit.rep <* P.not(P.char('.'))).string.map(_.toInt)
+
+  private val alwaysSpecial = Set('\\', ':', '^', '(', ')', '"', ' ', '*', '~')
+  private val allowed: P[Char] =
+    // From cats.parse.strings.Json nonEscaped handling
+    P.charIn((0x20.toChar to 0x10ffff.toChar).toSet -- alwaysSpecial)
+  val reserved = Set("OR", "||", "AND", "&&", "NOT", "+", "-", "/")
 
   // Term query
   // e.g. 'cat', 'catch22'
-  val reserved = Set("OR", "||", "AND", "&&", "NOT", "+", "-")
-  val term: P[String] = P.not(P.stringIn(reserved)).with1 *> (alpha | digit).rep.string
+  val term: P[String] = P.not(P.stringIn(reserved)).with1 *> allowed.rep.string
   val termQ: P[TermQ] = term.map(TermQ.apply)
 
   // Phrase query
@@ -94,10 +99,12 @@ object Parser {
 
   // Group query
   // e.g. '(cats AND dogs)'
-  def groupQ(query: P[Query]): P[Group] =
-    nonGrouped(query)
+  def groupQ(query: P[Query]): P[Group] = {
+    val g = nonGrouped(query)
       .between(P.char('('), P.char(')'))
-      .map(Group.apply)
+    val endOfGroupSpecial = P.char('@')
+    (g <* P.not(endOfGroupSpecial)).map(Group.apply)
+  }
 
   // Field query
   // e.g. 'title:cats', 'author:"Silly Goose"', 'title:(cats AND dogs)'
