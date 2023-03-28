@@ -26,6 +26,7 @@ object Query {
   final case class FieldQ(field: String, q: Query) extends Query
   final case class ProximityQ(q: String, num: Int) extends Query
   final case class PrefixTerm(q: String) extends Query
+  final case class Regex(r: String) extends Query
   final case class FuzzyTerm(q: String, num: Option[Int]) extends Query
   final case class OrQ(qs: NonEmptyList[Query]) extends Query
   final case class AndQ(qs: NonEmptyList[Query]) extends Query
