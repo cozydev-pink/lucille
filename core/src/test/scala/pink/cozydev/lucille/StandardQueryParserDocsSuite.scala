@@ -63,9 +63,14 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     )
   }
 
-  test("/.est(s|ing)/".fail) {
+  test("/.est(s|ing)/") {
     val r = parseQ("/.est(s|ing)/")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(Regex(".est(s|ing)"))
+      ),
+    )
   }
 
   test("nest~4") {

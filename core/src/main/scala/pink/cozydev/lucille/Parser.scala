@@ -31,10 +31,11 @@ object Parser {
   val maybeSpace: Parser0[Unit] = spaces.?.void
   val int: P[Int] = (digit.rep <* P.not(P.char('.'))).string.map(_.toInt)
 
-  private val alwaysSpecial = Set('\\', ':', '^', '(', ')', '"', ' ', '*', '~')
+  private val baseRange = (0x20.toChar to 0x10ffff.toChar).toSet
+  private val special = Set('\\', ':', '^', '(', ')', '"', ' ', '*', '~')
   private val allowed: P[Char] =
     // From cats.parse.strings.Json nonEscaped handling
-    P.charIn((0x20.toChar to 0x10ffff.toChar).toSet -- alwaysSpecial)
+    P.charIn(baseRange -- special)
   val reserved = Set("OR", "||", "AND", "&&", "NOT", "+", "-", "/")
 
   // Term query
@@ -66,6 +67,14 @@ object Parser {
   val prefixT: P[PrefixTerm] =
     (term.soft <* P.char('*'))
       .map(PrefixTerm.apply)
+
+  // Regex query
+  // e.g. '/.ump(s|ing)/'
+  private val regex: P[String] = {
+    val notEscape = P.charIn(baseRange - '\\' - '/')
+    notEscape.orElse(P.string("\\/")).rep.string.surroundedBy(pchar('/'))
+  }
+  val regexQ: P[Regex] = regex.map(Regex.apply)
 
   val or = (P.string("OR") | P.string("||")).as(Op.OR)
   val and = (P.string("AND") | P.string("&&")).as(Op.AND)
@@ -154,6 +163,7 @@ object Parser {
         fuzzyT,
         prefixT,
         termQ,
+        regexQ,
         phraseQ,
         groupQ(r),
       )
