@@ -47,7 +47,7 @@ class RegexSuite extends munit.FunSuite {
     assertSingleQ(r, Group(NonEmptyList.of(Regex("jump.*"), Regex(".ouse"))))
   }
 
-  test("fails to parse regex with escaped slash".fail) {
+  test("parse regex with escaped slash") {
     val r = parseQ("""/home\/.*/""")
     assertSingleQ(r, Regex("""home\/.*"""))
   }

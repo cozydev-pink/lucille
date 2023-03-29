@@ -70,8 +70,10 @@ object Parser {
 
   // Regex query
   // e.g. '/.ump(s|ing)/'
-  private val regex: P[String] =
-    P.charIn(baseRange - '/').rep.string.surroundedBy(pchar('/'))
+  private val regex: P[String] = {
+    val notEscape = P.charIn(baseRange - '\\' - '/')
+    notEscape.orElse(P.string("\\/")).rep.string.surroundedBy(pchar('/'))
+  }
   val regexQ: P[Regex] = regex.map(Regex.apply)
 
   val or = (P.string("OR") | P.string("||")).as(Op.OR)
