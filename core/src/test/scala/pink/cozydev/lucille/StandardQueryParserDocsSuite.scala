@@ -226,14 +226,39 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assert(r.isRight)
   }
 
-  test("(blue crab fish)@2".fail) {
+  test("(blue crab fish)@2") {
     val r = parseQ("(blue crab fish)@2")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          MinimumMatchQ(NonEmptyList.of(TermQ("blue"), TermQ("crab"), TermQ("fish")), 2)
+        )
+      ),
+    )
   }
 
-  test("((yellow OR blue) crab fish)@2".fail) {
+  test("((yellow OR blue) crab fish)@2") {
     val r = parseQ("((yellow OR blue) crab fish)@2")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(
+        NonEmptyList.of(
+          MinimumMatchQ(
+            NonEmptyList.of(
+              Group(
+                NonEmptyList.of(
+                  OrQ(NonEmptyList.of(TermQ("yellow"), TermQ("blue")))
+                )
+              ),
+              TermQ("crab"),
+              TermQ("fish"),
+            ),
+            2,
+          )
+        )
+      ),
+    )
   }
 
   // TODO parses but not into "interval function clauses"

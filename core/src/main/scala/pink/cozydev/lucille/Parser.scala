@@ -106,6 +106,14 @@ object Parser {
   def notQ(query: P[Query]): P[Query] =
     ((P.string("NOT").soft ~ maybeSpace) *> query).map(NotQ.apply)
 
+  // Minimum match query
+  // e.g. '(one two three)@2'
+  def minimumMatchQ(query: P[Query]): P[MinimumMatchQ] = {
+    val matchNum = P.char('@') *> int
+    val grouped = nonGrouped(query).between(P.char('('), P.char(')'))
+    (grouped.soft ~ matchNum).map { case (qs, n) => MinimumMatchQ(qs, n) }
+  }
+
   // Group query
   // e.g. '(cats AND dogs)'
   def groupQ(query: P[Query]): P[Group] = {
@@ -165,6 +173,7 @@ object Parser {
         termQ,
         regexQ,
         phraseQ,
+        minimumMatchQ(r),
         groupQ(r),
       )
     )
