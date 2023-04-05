@@ -40,4 +40,5 @@ object Query {
       lowerInc: Boolean,
       upperInc: Boolean,
   ) extends Query
+  final case class MinimumMatchQ(qs: NonEmptyList[Query], num: Int) extends Query
 }
