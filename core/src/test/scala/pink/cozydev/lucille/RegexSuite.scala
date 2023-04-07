@@ -29,7 +29,7 @@ class RegexSuite extends munit.FunSuite {
 
   test("parse single regex with wildcard star") {
     val r = parseQ("/jump.*/")
-    assertSingleQ(r, Regex("jump.*"))
+    assertSingleQ(r, TermRegex("jump.*"))
   }
 
   test("does not parse without ending slash") {
@@ -39,17 +39,17 @@ class RegexSuite extends munit.FunSuite {
 
   test("parse regex with repeat min-max") {
     val r = parseQ("/hi{1,5}/")
-    assertSingleQ(r, Regex("hi{1,5}"))
+    assertSingleQ(r, TermRegex("hi{1,5}"))
   }
 
   test("parse multipe regex in a group") {
     val r = parseQ("(/jump.*/ /.ouse/)")
-    assertSingleQ(r, Group(NonEmptyList.of(Regex("jump.*"), Regex(".ouse"))))
+    assertSingleQ(r, Group(NonEmptyList.of(TermRegex("jump.*"), TermRegex(".ouse"))))
   }
 
   test("parse regex with escaped slash") {
     val r = parseQ("""/home\/.*/""")
-    assertSingleQ(r, Regex("""home\/.*"""))
+    assertSingleQ(r, TermRegex("""home\/.*"""))
   }
 
 }

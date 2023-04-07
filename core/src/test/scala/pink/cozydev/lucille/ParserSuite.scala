@@ -27,62 +27,62 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
 
   test("parse single term") {
     val r = parseQ("the")
-    assertSingleTerm(r, TermQ("the"))
+    assertSingleTerm(r, Term("the"))
   }
 
   test("parse single term with trailing whitespace") {
     val r = parseQ("the   ")
-    assertSingleTerm(r, TermQ("the"))
+    assertSingleTerm(r, Term("the"))
   }
 
   test("parse single term with leading whitespace") {
     val r = parseQ("  the")
-    assertSingleTerm(r, TermQ("the"))
+    assertSingleTerm(r, Term("the"))
   }
 
   test("parse single term with trailing and leading whitespace") {
     val r = parseQ("  the      ")
-    assertSingleTerm(r, TermQ("the"))
+    assertSingleTerm(r, Term("the"))
   }
 
   test("parse phrase term") {
     val r = parseQ("\"The cat jumped\"")
-    assertSingleTerm(r, PhraseQ("The cat jumped"))
+    assertSingleTerm(r, Phrase("The cat jumped"))
   }
 
   test("parse phrase term with leading and trailing whitespace") {
     val r = parseQ("  \"The cat jumped\"  ")
-    assertSingleTerm(r, PhraseQ("The cat jumped"))
+    assertSingleTerm(r, Phrase("The cat jumped"))
   }
 
   test("parse field query with term") {
     val r = parseQ("fieldName:cat")
-    assertSingleTerm(r, FieldQ("fieldName", TermQ("cat")))
+    assertSingleTerm(r, Field("fieldName", Term("cat")))
   }
 
   test("parse field query with term with leading and trailing whitespace") {
     val r = parseQ("  fieldName:cat  ")
-    assertSingleTerm(r, FieldQ("fieldName", TermQ("cat")))
+    assertSingleTerm(r, Field("fieldName", Term("cat")))
   }
 
   test("parse field query with phrase") {
     val r = parseQ("fieldName:\"The cat jumped\"")
-    assertEquals(r, Right(NonEmptyList.of(FieldQ("fieldName", PhraseQ("The cat jumped")))))
+    assertEquals(r, Right(NonEmptyList.of(Field("fieldName", Phrase("The cat jumped")))))
   }
 
   test("parse single term with numbers") {
     val r = parseQ("catch22")
-    assertSingleTerm(r, TermQ("catch22"))
+    assertSingleTerm(r, Term("catch22"))
   }
 
   test("parse field query with number in name") {
     val r = parseQ("fieldName42:cat")
-    assertSingleTerm(r, FieldQ("fieldName42", TermQ("cat")))
+    assertSingleTerm(r, Field("fieldName42", Term("cat")))
   }
 
   test("parse field query with number in term") {
     val r = parseQ("fieldName42:cat42")
-    assertSingleTerm(r, FieldQ("fieldName42", TermQ("cat42")))
+    assertSingleTerm(r, Field("fieldName42", Term("cat42")))
   }
 
   test("field names cannot be reserved suffix operators") {
@@ -101,25 +101,25 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
 
   test("parse multiple terms completely") {
     val r = parseQ("The cat jumped")
-    assertEquals(r, Right(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+    assertEquals(r, Right(NonEmptyList.of(Term("The"), Term("cat"), Term("jumped"))))
   }
 
   test("parse multiple terms with lots of spaces completely") {
     val r = parseQ("The cat   jumped   ")
-    assertEquals(r, Right(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+    assertEquals(r, Right(NonEmptyList.of(Term("The"), Term("cat"), Term("jumped"))))
   }
 
   test("parse field query and terms completely") {
     val r = parseQ("fieldName:The cat jumped")
     assertEquals(
       r,
-      Right(NonEmptyList.of(FieldQ("fieldName", TermQ("The")), TermQ("cat"), TermQ("jumped"))),
+      Right(NonEmptyList.of(Field("fieldName", Term("The")), Term("cat"), Term("jumped"))),
     )
   }
 
   test("parse proximity query completely") {
     val r = parseQ("\"derp lerp\"~3")
-    assertEquals(r, Right(NonEmptyList.of(ProximityQ("derp lerp", 3))))
+    assertEquals(r, Right(NonEmptyList.of(Proximity("derp lerp", 3))))
   }
 
   test("parse proximity with decimal does not parse") {
@@ -129,12 +129,12 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
 
   test("parse fuzzy term without number parses completely") {
     val r = parseQ("derp~")
-    assertEquals(r, Right(NonEmptyList.of(FuzzyTerm("derp", None))))
+    assertEquals(r, Right(NonEmptyList.of(Fuzzy("derp", None))))
   }
 
   test("parse fuzzy term with number parses completely") {
     val r = parseQ("derp~2")
-    assertEquals(r, Right(NonEmptyList.of(FuzzyTerm("derp", Some(2)))))
+    assertEquals(r, Right(NonEmptyList.of(Fuzzy("derp", Some(2)))))
   }
 
   test("parse fuzzy term with decimal does not parse") {
@@ -151,7 +151,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          OrQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp")))
+          Or(NonEmptyList.of(Term("derp"), Term("lerp")))
         )
       ),
     )
@@ -163,7 +163,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          OrQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"), TermQ("slerp")))
+          Or(NonEmptyList.of(Term("derp"), Term("lerp"), Term("slerp")))
         )
       ),
     )
@@ -175,7 +175,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          OrQ(NonEmptyList.of(TermQ("derp"), PhraseQ("lerp slerp")))
+          Or(NonEmptyList.of(Term("derp"), Phrase("lerp slerp")))
         )
       ),
     )
@@ -217,7 +217,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp")))
+          And(NonEmptyList.of(Term("derp"), Term("lerp")))
         )
       ),
     )
@@ -229,8 +229,8 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          TermQ("term"),
-          OrQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"))),
+          Term("term"),
+          Or(NonEmptyList.of(Term("derp"), Term("lerp"))),
         )
       ),
     )
@@ -242,8 +242,8 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          OrQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"))),
-          TermQ("slerp"),
+          Or(NonEmptyList.of(Term("derp"), Term("lerp"))),
+          Term("slerp"),
         )
       ),
     )
@@ -255,8 +255,8 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"))),
-          TermQ("slerp"),
+          And(NonEmptyList.of(Term("derp"), Term("lerp"))),
+          Term("slerp"),
         )
       ),
     )
@@ -268,7 +268,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(NonEmptyList.of(TermQ("derp"), PhraseQ("lerp slerp")))
+          And(NonEmptyList.of(Term("derp"), Phrase("lerp slerp")))
         )
       ),
     )
@@ -280,7 +280,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(NonEmptyList.of(TermQ("derp"), PhraseQ("lerp slerp")))
+          And(NonEmptyList.of(Term("derp"), Phrase("lerp slerp")))
         )
       ),
     )
@@ -292,10 +292,10 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(NonEmptyList.of(TermQ("derp"), TermQ("lerp"))),
-          TermQ("slerp"),
-          OrQ(NonEmptyList.of(TermQ("orA"), TermQ("orB"))),
-          TermQ("last"),
+          And(NonEmptyList.of(Term("derp"), Term("lerp"))),
+          Term("slerp"),
+          Or(NonEmptyList.of(Term("orA"), Term("orB"))),
+          Term("last"),
         )
       ),
     )
@@ -307,7 +307,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          NotQ(TermQ("derp"))
+          Not(Term("derp"))
         )
       ),
     )
@@ -319,7 +319,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(NonEmptyList.of(TermQ("derp"), NotQ(TermQ("lerp"))))
+          And(NonEmptyList.of(Term("derp"), Not(Term("lerp"))))
         )
       ),
     )
@@ -333,7 +333,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+        NonEmptyList.of(Group(NonEmptyList.of(Term("The"), Term("cat"), Term("jumped"))))
       ),
     )
   }
@@ -343,7 +343,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(NonEmptyList.of(TermQ("The"), TermQ("cat"), TermQ("jumped"))))
+        NonEmptyList.of(Group(NonEmptyList.of(Term("The"), Term("cat"), Term("jumped"))))
       ),
     )
   }
@@ -354,9 +354,9 @@ class GroupQuerySuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          TermQ("animals"),
-          NotQ(
-            Group(NonEmptyList.of(AndQ(NonEmptyList.of(TermQ("cats"), TermQ("dogs")))))
+          Term("animals"),
+          Not(
+            Group(NonEmptyList.of(And(NonEmptyList.of(Term("cats"), Term("dogs")))))
           ),
         )
       ),
@@ -369,9 +369,9 @@ class GroupQuerySuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          FieldQ(
+          Field(
             "title",
-            Group(NonEmptyList.of(AndQ(NonEmptyList.of(TermQ("cats"), TermQ("dogs"))))),
+            Group(NonEmptyList.of(And(NonEmptyList.of(Term("cats"), Term("dogs"))))),
           )
         )
       ),
@@ -384,12 +384,12 @@ class GroupQuerySuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(
+          And(
             NonEmptyList.of(
-              FieldQ("title", TermQ("test")),
+              Field("title", Term("test")),
               Group(
                 NonEmptyList.of(
-                  OrQ(NonEmptyList.of(TermQ("pass"), TermQ("fail")))
+                  Or(NonEmptyList.of(Term("pass"), Term("fail")))
                 )
               ),
             )
@@ -401,12 +401,12 @@ class GroupQuerySuite extends munit.FunSuite {
 
   test("parse nested group query with trailing term") {
     val r = parseQ("(title:test AND (pass OR fail)) extra")
-    val gq = AndQ(
+    val gq = And(
       NonEmptyList.of(
-        FieldQ("title", TermQ("test")),
+        Field("title", Term("test")),
         Group(
           NonEmptyList.of(
-            OrQ(NonEmptyList.of(TermQ("pass"), TermQ("fail")))
+            Or(NonEmptyList.of(Term("pass"), Term("fail")))
           )
         ),
       )
@@ -414,19 +414,19 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(NonEmptyList.of(gq)), TermQ("extra"))
+        NonEmptyList.of(Group(NonEmptyList.of(gq)), Term("extra"))
       ),
     )
   }
 
   test("parse nested group query AND'd with a phrase query") {
     val r = parseQ("(title:test AND (pass OR fail)) AND \"extra phrase\"")
-    val gq = AndQ(
+    val gq = And(
       NonEmptyList.of(
-        FieldQ("title", TermQ("test")),
+        Field("title", Term("test")),
         Group(
           NonEmptyList.of(
-            OrQ(NonEmptyList.of(TermQ("pass"), TermQ("fail")))
+            Or(NonEmptyList.of(Term("pass"), Term("fail")))
           )
         ),
       )
@@ -435,10 +435,10 @@ class GroupQuerySuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(
+          And(
             NonEmptyList.of(
               Group(NonEmptyList.of(gq)),
-              PhraseQ("extra phrase"),
+              Phrase("extra phrase"),
             )
           )
         )

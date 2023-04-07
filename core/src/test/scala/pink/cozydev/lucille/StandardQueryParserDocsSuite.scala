@@ -28,7 +28,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(TermQ("test"))
+        NonEmptyList.of(Term("test"))
       ),
     )
   }
@@ -38,7 +38,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(TermQ("test"), TermQ("equipment"))
+        NonEmptyList.of(Term("test"), Term("equipment"))
       ),
     )
   }
@@ -48,7 +48,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(ProximityQ("test failure", 4))
+        NonEmptyList.of(Proximity("test failure", 4))
       ),
     )
   }
@@ -58,7 +58,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(PrefixTerm("tes"))
+        NonEmptyList.of(Prefix("tes"))
       ),
     )
   }
@@ -68,7 +68,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Regex(".est(s|ing)"))
+        NonEmptyList.of(TermRegex(".est(s|ing)"))
       ),
     )
   }
@@ -78,7 +78,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(FuzzyTerm("nest", Some(4)))
+        NonEmptyList.of(Fuzzy("nest", Some(4)))
       ),
     )
   }
@@ -88,7 +88,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(FieldQ("title", TermQ("test")))
+        NonEmptyList.of(Field("title", Term("test")))
       ),
     )
   }
@@ -99,7 +99,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          FieldQ("title", Group(NonEmptyList.of(OrQ(NonEmptyList.of(TermQ("die"), TermQ("hard"))))))
+          Field("title", Group(NonEmptyList.of(Or(NonEmptyList.of(Term("die"), Term("hard"))))))
         )
       ),
     )
@@ -110,7 +110,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(AndQ(NonEmptyList.of(TermQ("test"), TermQ("results"))))
+        NonEmptyList.of(And(NonEmptyList.of(Term("test"), Term("results"))))
       ),
     )
   }
@@ -121,10 +121,10 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(
+          And(
             NonEmptyList.of(
-              FieldQ("title", TermQ("test")),
-              NotQ(FieldQ("title", TermQ("complete"))),
+              Field("title", Term("test")),
+              Not(Field("title", Term("complete"))),
             )
           )
         )
@@ -138,15 +138,15 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          AndQ(
+          And(
             NonEmptyList.of(
-              FieldQ("title", TermQ("test")),
+              Field("title", Term("test")),
               Group(
                 NonEmptyList.of(
-                  OrQ(
+                  Or(
                     NonEmptyList.of(
-                      PrefixTerm("pass"),
-                      PrefixTerm("fail"),
+                      Prefix("pass"),
+                      Prefix("fail"),
                     )
                   )
                 )
@@ -164,7 +164,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          FieldQ("title", Group(NonEmptyList.of(TermQ("pass"), TermQ("fail"), TermQ("skip"))))
+          Field("title", Group(NonEmptyList.of(Term("pass"), Term("fail"), Term("skip"))))
         )
       ),
     )
@@ -176,10 +176,10 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          FieldQ(
+          Field(
             "title",
             Group(
-              NonEmptyList.of(UnaryPlus(TermQ("test")), UnaryPlus(PhraseQ("result unknown")))
+              NonEmptyList.of(UnaryPlus(Term("test")), UnaryPlus(Phrase("result unknown")))
             ),
           )
         )
@@ -191,7 +191,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("name:[Jones TO Smith]")
     assertEquals(
       r,
-      Right(NonEmptyList.of(FieldQ("name", RangeQ(Some("Jones"), Some("Smith"), true, true)))),
+      Right(NonEmptyList.of(Field("name", TermRange(Some("Jones"), Some("Smith"), true, true)))),
     )
   }
 
@@ -199,7 +199,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("score:{2.5 TO 7.3}")
     assertEquals(
       r,
-      Right(NonEmptyList.of(FieldQ("score", RangeQ(Some("2.5"), Some("7.3"), false, false)))),
+      Right(NonEmptyList.of(Field("score", TermRange(Some("2.5"), Some("7.3"), false, false)))),
     )
   }
 
@@ -207,7 +207,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("score:{2.5 TO *]")
     assertEquals(
       r,
-      Right(NonEmptyList.of(FieldQ("score", RangeQ(Some("2.5"), None, false, true)))),
+      Right(NonEmptyList.of(Field("score", TermRange(Some("2.5"), None, false, true)))),
     )
   }
 
@@ -232,7 +232,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          MinimumMatchQ(NonEmptyList.of(TermQ("blue"), TermQ("crab"), TermQ("fish")), 2)
+          MinimumMatch(NonEmptyList.of(Term("blue"), Term("crab"), Term("fish")), 2)
         )
       ),
     )
@@ -244,15 +244,15 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          MinimumMatchQ(
+          MinimumMatch(
             NonEmptyList.of(
               Group(
                 NonEmptyList.of(
-                  OrQ(NonEmptyList.of(TermQ("yellow"), TermQ("blue")))
+                  Or(NonEmptyList.of(Term("yellow"), Term("blue")))
                 )
               ),
-              TermQ("crab"),
-              TermQ("fish"),
+              Term("crab"),
+              Term("fish"),
             ),
             2,
           )

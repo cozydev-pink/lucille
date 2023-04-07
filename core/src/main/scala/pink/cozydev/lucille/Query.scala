@@ -21,24 +21,24 @@ import cats.data.NonEmptyList
 sealed trait Query extends Product with Serializable
 
 object Query {
-  final case class TermQ(q: String) extends Query
-  final case class PhraseQ(q: String) extends Query
-  final case class FieldQ(field: String, q: Query) extends Query
-  final case class ProximityQ(q: String, num: Int) extends Query
-  final case class PrefixTerm(q: String) extends Query
-  final case class Regex(r: String) extends Query
-  final case class FuzzyTerm(q: String, num: Option[Int]) extends Query
-  final case class OrQ(qs: NonEmptyList[Query]) extends Query
-  final case class AndQ(qs: NonEmptyList[Query]) extends Query
-  final case class NotQ(q: Query) extends Query
-  final case class Group(qs: NonEmptyList[Query]) extends Query
-  final case class UnaryPlus(q: Query) extends Query
-  final case class UnaryMinus(q: Query) extends Query
-  final case class RangeQ(
+  final case class Term(str: String) extends Query
+  final case class Phrase(str: String) extends Query
+  final case class Prefix(str: String) extends Query
+  final case class Proximity(str: String, num: Int) extends Query
+  final case class Fuzzy(str: String, num: Option[Int]) extends Query
+  final case class TermRegex(str: String) extends Query
+  final case class TermRange(
       lower: Option[String],
       upper: Option[String],
       lowerInc: Boolean,
       upperInc: Boolean,
   ) extends Query
-  final case class MinimumMatchQ(qs: NonEmptyList[Query], num: Int) extends Query
+  final case class Or(qs: NonEmptyList[Query]) extends Query
+  final case class And(qs: NonEmptyList[Query]) extends Query
+  final case class Not(q: Query) extends Query
+  final case class Group(qs: NonEmptyList[Query]) extends Query
+  final case class UnaryPlus(q: Query) extends Query
+  final case class UnaryMinus(q: Query) extends Query
+  final case class MinimumMatch(qs: NonEmptyList[Query], num: Int) extends Query
+  final case class Field(field: String, q: Query) extends Query
 }
