@@ -99,7 +99,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          Field("title", Group(NonEmptyList.of(Or(NonEmptyList.of(Term("die"), Term("hard"))))))
+          Field("title", Group(Or(Term("die"), Term("hard"))))
         )
       ),
     )
@@ -110,7 +110,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(And(NonEmptyList.of(Term("test"), Term("results"))))
+        NonEmptyList.of(And(Term("test"), Term("results")))
       ),
     )
   }
@@ -122,10 +122,8 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       Right(
         NonEmptyList.of(
           And(
-            NonEmptyList.of(
-              Field("title", Term("test")),
-              Not(Field("title", Term("complete"))),
-            )
+            Field("title", Term("test")),
+            Not(Field("title", Term("complete"))),
           )
         )
       ),
@@ -139,19 +137,13 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       Right(
         NonEmptyList.of(
           And(
-            NonEmptyList.of(
-              Field("title", Term("test")),
-              Group(
-                NonEmptyList.of(
-                  Or(
-                    NonEmptyList.of(
-                      Prefix("pass"),
-                      Prefix("fail"),
-                    )
-                  )
-                )
-              ),
-            )
+            Field("title", Term("test")),
+            Group(
+              Or(
+                Prefix("pass"),
+                Prefix("fail"),
+              )
+            ),
           )
         )
       ),
@@ -164,7 +156,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          Field("title", Group(NonEmptyList.of(Term("pass"), Term("fail"), Term("skip"))))
+          Field("title", Group(Term("pass"), Term("fail"), Term("skip")))
         )
       ),
     )
@@ -179,7 +171,8 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
           Field(
             "title",
             Group(
-              NonEmptyList.of(UnaryPlus(Term("test")), UnaryPlus(Phrase("result unknown")))
+              UnaryPlus(Term("test")),
+              UnaryPlus(Phrase("result unknown")),
             ),
           )
         )
@@ -247,9 +240,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
           MinimumMatch(
             NonEmptyList.of(
               Group(
-                NonEmptyList.of(
-                  Or(NonEmptyList.of(Term("yellow"), Term("blue")))
-                )
+                Or(Term("yellow"), Term("blue"))
               ),
               Term("crab"),
               Term("fish"),
