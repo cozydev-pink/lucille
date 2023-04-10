@@ -151,7 +151,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          Or(NonEmptyList.of(Term("derp"), Term("lerp")))
+          Or(Term("derp"), Term("lerp"))
         )
       ),
     )
@@ -163,7 +163,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          Or(NonEmptyList.of(Term("derp"), Term("lerp"), Term("slerp")))
+          Or(Term("derp"), Term("lerp"), Term("slerp"))
         )
       ),
     )
@@ -175,7 +175,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          Or(NonEmptyList.of(Term("derp"), Phrase("lerp slerp")))
+          Or(Term("derp"), Phrase("lerp slerp"))
         )
       ),
     )
@@ -217,7 +217,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          And(NonEmptyList.of(Term("derp"), Term("lerp")))
+          And(Term("derp"), Term("lerp"))
         )
       ),
     )
@@ -230,7 +230,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       Right(
         NonEmptyList.of(
           Term("term"),
-          Or(NonEmptyList.of(Term("derp"), Term("lerp"))),
+          Or(Term("derp"), Term("lerp")),
         )
       ),
     )
@@ -242,7 +242,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          Or(NonEmptyList.of(Term("derp"), Term("lerp"))),
+          Or(Term("derp"), Term("lerp")),
           Term("slerp"),
         )
       ),
@@ -255,7 +255,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          And(NonEmptyList.of(Term("derp"), Term("lerp"))),
+          And(Term("derp"), Term("lerp")),
           Term("slerp"),
         )
       ),
@@ -268,7 +268,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          And(NonEmptyList.of(Term("derp"), Phrase("lerp slerp")))
+          And(Term("derp"), Phrase("lerp slerp"))
         )
       ),
     )
@@ -280,7 +280,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          And(NonEmptyList.of(Term("derp"), Phrase("lerp slerp")))
+          And(Term("derp"), Phrase("lerp slerp"))
         )
       ),
     )
@@ -292,9 +292,9 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          And(NonEmptyList.of(Term("derp"), Term("lerp"))),
+          And(Term("derp"), Term("lerp")),
           Term("slerp"),
-          Or(NonEmptyList.of(Term("orA"), Term("orB"))),
+          Or(Term("orA"), Term("orB")),
           Term("last"),
         )
       ),
@@ -319,7 +319,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         NonEmptyList.of(
-          And(NonEmptyList.of(Term("derp"), Not(Term("lerp"))))
+          And(Term("derp"), Not(Term("lerp")))
         )
       ),
     )
@@ -333,7 +333,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(NonEmptyList.of(Term("The"), Term("cat"), Term("jumped"))))
+        NonEmptyList.of(Group(Term("The"), Term("cat"), Term("jumped")))
       ),
     )
   }
@@ -343,7 +343,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(NonEmptyList.of(Term("The"), Term("cat"), Term("jumped"))))
+        NonEmptyList.of(Group(Term("The"), Term("cat"), Term("jumped")))
       ),
     )
   }
@@ -356,7 +356,7 @@ class GroupQuerySuite extends munit.FunSuite {
         NonEmptyList.of(
           Term("animals"),
           Not(
-            Group(NonEmptyList.of(And(NonEmptyList.of(Term("cats"), Term("dogs")))))
+            Group(And(Term("cats"), Term("dogs")))
           ),
         )
       ),
@@ -371,7 +371,7 @@ class GroupQuerySuite extends munit.FunSuite {
         NonEmptyList.of(
           Field(
             "title",
-            Group(NonEmptyList.of(And(NonEmptyList.of(Term("cats"), Term("dogs"))))),
+            Group(And(Term("cats"), Term("dogs"))),
           )
         )
       ),
@@ -385,14 +385,10 @@ class GroupQuerySuite extends munit.FunSuite {
       Right(
         NonEmptyList.of(
           And(
-            NonEmptyList.of(
-              Field("title", Term("test")),
-              Group(
-                NonEmptyList.of(
-                  Or(NonEmptyList.of(Term("pass"), Term("fail")))
-                )
-              ),
-            )
+            Field("title", Term("test")),
+            Group(
+              Or(Term("pass"), Term("fail"))
+            ),
           )
         )
       ),
@@ -405,16 +401,14 @@ class GroupQuerySuite extends munit.FunSuite {
       NonEmptyList.of(
         Field("title", Term("test")),
         Group(
-          NonEmptyList.of(
-            Or(NonEmptyList.of(Term("pass"), Term("fail")))
-          )
+          Or(Term("pass"), Term("fail"))
         ),
       )
     )
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(NonEmptyList.of(gq)), Term("extra"))
+        NonEmptyList.of(Group(gq), Term("extra"))
       ),
     )
   }
@@ -425,9 +419,7 @@ class GroupQuerySuite extends munit.FunSuite {
       NonEmptyList.of(
         Field("title", Term("test")),
         Group(
-          NonEmptyList.of(
-            Or(NonEmptyList.of(Term("pass"), Term("fail")))
-          )
+          Or(Term("pass"), Term("fail"))
         ),
       )
     )
@@ -436,10 +428,8 @@ class GroupQuerySuite extends munit.FunSuite {
       Right(
         NonEmptyList.of(
           And(
-            NonEmptyList.of(
-              Group(NonEmptyList.of(gq)),
-              Phrase("extra phrase"),
-            )
+            Group(gq),
+            Phrase("extra phrase"),
           )
         )
       ),
