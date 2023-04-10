@@ -33,10 +33,27 @@ object Query {
       lowerInc: Boolean,
       upperInc: Boolean,
   ) extends Query
+
   final case class Or(qs: NonEmptyList[Query]) extends Query
+  object Or {
+    def apply(head: Query, tail: Query*): Or =
+      Or(NonEmptyList(head, tail.toList))
+  }
+
   final case class And(qs: NonEmptyList[Query]) extends Query
+  object And {
+    def apply(head: Query, tail: Query*): And =
+      And(NonEmptyList(head, tail.toList))
+  }
+
   final case class Not(q: Query) extends Query
+
   final case class Group(qs: NonEmptyList[Query]) extends Query
+  object Group {
+    def apply(head: Query, tail: Query*): Group =
+      Group(NonEmptyList(head, tail.toList))
+  }
+
   final case class UnaryPlus(q: Query) extends Query
   final case class UnaryMinus(q: Query) extends Query
   final case class MinimumMatch(qs: NonEmptyList[Query], num: Int) extends Query
