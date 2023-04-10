@@ -25,7 +25,7 @@ class AssociateOpsSuite extends munit.FunSuite {
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((OR, Term("dog")))
     val result = associateOps(leftQs, opQs)
-    val expected = NonEmptyList.of(Term("the"), Or(NonEmptyList.of(Term("cat"), Term("dog"))))
+    val expected = NonEmptyList.of(Term("the"), Or(Term("cat"), Term("dog")))
     assertEquals(result, expected)
   }
 
@@ -33,7 +33,7 @@ class AssociateOpsSuite extends munit.FunSuite {
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((AND, Term("dog")))
     val result = associateOps(leftQs, opQs)
-    val expected = NonEmptyList.of(Term("the"), And(NonEmptyList.of(Term("cat"), Term("dog"))))
+    val expected = NonEmptyList.of(Term("the"), And(Term("cat"), Term("dog")))
     assertEquals(result, expected)
   }
 
@@ -42,7 +42,7 @@ class AssociateOpsSuite extends munit.FunSuite {
     val opQs = List((OR, Term("dog")), (OR, Term("fish")))
     val result = associateOps(leftQs, opQs)
     val expected =
-      NonEmptyList.of(Term("the"), Or(NonEmptyList.of(Term("cat"), Term("dog"), Term("fish"))))
+      NonEmptyList.of(Term("the"), Or(Term("cat"), Term("dog"), Term("fish")))
     assertEquals(result, expected)
   }
 
@@ -53,7 +53,7 @@ class AssociateOpsSuite extends munit.FunSuite {
     val expected =
       NonEmptyList.of(
         Term("the"),
-        And(NonEmptyList.of(Term("cat"), Term("dog"), Term("fish"))),
+        And(Term("cat"), Term("dog"), Term("fish")),
       )
     assertEquals(result, expected)
   }
@@ -68,7 +68,7 @@ class AssociateOpsSuite extends munit.FunSuite {
       NonEmptyList.of(
         Term("the"),
         Term("cat"),
-        And(NonEmptyList.of(Term("ocean"), Term("fish"))),
+        And(Term("ocean"), Term("fish")),
       )
     assertEquals(result, expected)
   }
@@ -82,8 +82,8 @@ class AssociateOpsSuite extends munit.FunSuite {
     val expected =
       NonEmptyList.of(
         Term("the"),
-        And(NonEmptyList.of(Term("cat"), Term("ocean"))),
-        Or(NonEmptyList.of(Term("fish"))),
+        And(Term("cat"), Term("ocean")),
+        Or(Term("fish")),
       )
     assertEquals(result, expected)
   }
@@ -99,7 +99,7 @@ class AssociateOpsSuite extends munit.FunSuite {
         Term("the"),
         Term("cat"),
         Term("ocean"),
-        And(NonEmptyList.of(Term("ocean2"), Term("fish"))),
+        And(Term("ocean2"), Term("fish")),
       )
     assertEquals(result, expected)
   }
@@ -113,8 +113,8 @@ class AssociateOpsSuite extends munit.FunSuite {
     val expected =
       NonEmptyList.of(
         Term("the"),
-        And(NonEmptyList.of(Term("cat"), Term("ocean"), Term("ocean2"))),
-        Or(NonEmptyList.of(Term("fish"))),
+        And(Term("cat"), Term("ocean"), Term("ocean2")),
+        Or(Term("fish")),
       )
     assertEquals(result, expected)
   }
