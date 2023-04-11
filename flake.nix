@@ -20,6 +20,7 @@
           typelevelShell = {
             jdk.package = pkgs.jdk11;
             nodejs.enable = true;
+            native.enable = true;
           };
         };
       }
