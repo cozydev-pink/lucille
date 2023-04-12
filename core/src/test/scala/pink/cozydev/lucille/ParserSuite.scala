@@ -25,7 +25,7 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
   def assertSingleTerm(r: Either[Error, MultiQuery], expected: Query)(implicit
       loc: munit.Location
   ) =
-    assertEquals(r, Right(MultiQuery(NonEmptyList.one(expected))))
+    assertEquals(r, Right(MultiQuery(expected)))
 
   test("parse single term") {
     val r = parseQ("the")

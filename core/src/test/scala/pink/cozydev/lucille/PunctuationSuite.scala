@@ -15,7 +15,6 @@
  */
 
 package pink.cozydev.lucille
-import cats.data.NonEmptyList
 import cats.parse.Parser.Error
 import Query._
 import Parser._
@@ -26,7 +25,7 @@ class PunctuationSuite extends munit.FunSuite {
   def assertSingleQ(r: Either[Error, MultiQuery], expected: Query)(implicit
       loc: munit.Location
   ) =
-    assertEquals(r, Right(MultiQuery(NonEmptyList.one(expected))))
+    assertEquals(r, Right(MultiQuery(expected)))
 
   test("parse single term with period") {
     val r = parseQ("typelevel.com")
