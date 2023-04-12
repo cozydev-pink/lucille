@@ -15,3 +15,44 @@ libraryDependencies += "pink.cozydev" %% "lucille" % "@VERSION@"
 // use this snippet for JS, Native, or cross-building
 libraryDependencies += "pink.cozydev" %%% "lucille" % "@VERSION@"
 ```
+
+### Parsing
+
+Lucille offers a `parseQ` function to parse all of a string into a Lucille `MultiQuery` structure:
+
+```scala mdoc
+import pink.cozydev.lucille.Parser
+
+Parser.parseQ("cats OR dogs")
+```
+
+### Last Query Rewriting
+
+To enable a better interactive search experience, it can be helpful to rewrite the last term as a
+prefix term to enable partial matching on terms.
+
+We'll write a helper function `expandQ` to rewrite `Term` queries into a query that matches either
+that term `OR` a `Prefix` query:
+
+```scala mdoc:silent
+import pink.cozydev.lucille.Query
+
+def expandQ(q: Query): Query =
+  q match {
+    case Query.Term(t) => Query.Or(Query.Term(t), Query.Prefix(t))
+    case _ => q
+  }
+```
+
+We can now use `expandQ` along with `mapLast` to rewrite the last term of a `MultiQuery` into our
+expanded term + prefix:
+
+```scala mdoc
+Parser.parseQ("cats do").map(mq => mq.mapLast(expandQ))
+```
+
+Unfortunately this doesn't currently work with the final term in a boolean query:
+
+```scala mdoc
+Parser.parseQ("cats OR do").map(mq => mq.mapLast(expandQ))
+```
