@@ -42,4 +42,32 @@ lazy val core = crossProject(JVMPlatform, JSPlatform)
     ),
   )
 
-lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
+import laika.ast.Path.Root
+import laika.helium.config.{IconLink, HeliumIcon, TextLink, ThemeNavigationSection}
+import cats.data.NonEmptyList
+lazy val docs = project
+  .in(file("site"))
+  .enablePlugins(TypelevelSitePlugin)
+  .dependsOn(core.jvm)
+  .settings(
+    tlSiteApiPackage := Some("lucille"),
+    tlSiteHelium := {
+      tlSiteHelium.value.site.darkMode.disabled.site
+        .topNavigationBar(
+          homeLink = IconLink.external("https://github.com/cozydev-pink/lucille", HeliumIcon.home)
+        )
+        .site
+        .mainNavigation(
+          appendLinks = Seq(
+            ThemeNavigationSection(
+              "Related Projects",
+              NonEmptyList.of(
+                TextLink.external("https://lucene.apache.org/", "lucene"),
+                TextLink.external("https://typelevel.org/cats-parse/", "cats-parse"),
+                TextLink.external("https://typelevel.org/cats/", "cats"),
+              ),
+            )
+          )
+        )
+    },
+  )
