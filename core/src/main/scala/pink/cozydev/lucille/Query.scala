@@ -20,6 +20,19 @@ import cats.data.NonEmptyList
 
 sealed trait Query extends Product with Serializable
 
+final case class MultiQuery(qs: NonEmptyList[Query]) extends Query {
+  def mapLast(f: Query => Query): MultiQuery =
+    if (qs.size == 1) MultiQuery(NonEmptyList.one(f(qs.head)))
+    else {
+      val newT = qs.tail.init :+ f(qs.last)
+      MultiQuery(NonEmptyList(qs.head, newT))
+    }
+}
+object MultiQuery {
+  def apply(head: Query, tail: Query*): MultiQuery =
+    MultiQuery(NonEmptyList(head, tail.toList))
+}
+
 object Query {
   final case class Term(str: String) extends Query
   final case class Phrase(str: String) extends Query
