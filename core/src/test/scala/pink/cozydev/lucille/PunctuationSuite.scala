@@ -30,27 +30,27 @@ class PunctuationSuite extends munit.FunSuite {
 
   test("parse single term with period") {
     val r = parseQ("typelevel.com")
-    assertSingleQ(r, TermQ("typelevel.com"))
+    assertSingleQ(r, Term("typelevel.com"))
   }
 
   test("parse single term with slash") {
     val r = parseQ("typelevel.com/cats")
-    assertSingleQ(r, TermQ("typelevel.com/cats"))
+    assertSingleQ(r, Term("typelevel.com/cats"))
   }
 
   test("parse single term with dash") {
     val r = parseQ("cats-effect")
-    assertSingleQ(r, TermQ("cats-effect"))
+    assertSingleQ(r, Term("cats-effect"))
   }
 
   test("parse single term with '@'") {
     val r = parseQ("first.last@email.com")
-    assertSingleQ(r, TermQ("first.last@email.com"))
+    assertSingleQ(r, Term("first.last@email.com"))
   }
 
   test("parse fieldQ with phraseQ with dash") {
     val r = parseQ("name:\"cats-effect\"")
-    assertSingleQ(r, FieldQ("name", PhraseQ("cats-effect")))
+    assertSingleQ(r, Field("name", Phrase("cats-effect")))
   }
 
 }
