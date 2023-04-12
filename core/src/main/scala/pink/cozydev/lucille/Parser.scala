@@ -71,8 +71,9 @@ object Parser {
   // TermRegex query
   // e.g. '/.ump(s|ing)/'
   private val regex: P[String] = {
-    val notEscape = P.charIn(baseRange - '\\' - '/')
-    notEscape.orElse(P.string("\\/")).rep.string.surroundedBy(pchar('/'))
+    val notEscape = P.charIn(baseRange - '\\' - '/').void
+    val rStr = notEscape.orElse(P.char('\\') *> P.char('/')).rep.string
+    rStr.surroundedBy(pchar('/'))
   }
   val regexQ: P[TermRegex] = regex.map(TermRegex.apply)
 
@@ -144,11 +145,9 @@ object Parser {
   def rangeQuery: P[TermRange] = {
     val inclLower = P.charIn('{', '[').map(lowerBound => lowerBound == '[') <* maybeSpace
     val inclUpper = maybeSpace *> P.charIn('}', ']').map(upperBound => upperBound == ']')
-    val boundValue =
-      P.char('*').as(None) | P.not(P.stringIn(reserved)).with1 *> (alpha | digit | P.char(
-        '.'
-      )).rep.string
-        .map(Some(_))
+    val wild = P.char('*').as(None)
+    val txt = (alpha.void | digit.void | P.char('.')).rep.string.map(Some(_))
+    val boundValue = wild | P.not(P.stringIn(reserved)).with1 *> txt
     val to = spaces *> P.string("TO") <* spaces
     (inclLower ~ boundValue ~ to ~ boundValue ~ inclUpper)
       .map { case ((((il, l), _), u), iu) =>
