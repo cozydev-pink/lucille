@@ -23,10 +23,10 @@ import Parser._
 // Similar to the SingleSimpleQuerySuite but with a focus on queries with punctuation
 class PunctuationSuite extends munit.FunSuite {
 
-  def assertSingleQ(r: Either[Error, NonEmptyList[Query]], expected: Query)(implicit
+  def assertSingleQ(r: Either[Error, MultiQuery], expected: Query)(implicit
       loc: munit.Location
   ) =
-    assertEquals(r, Right(NonEmptyList.one(expected)))
+    assertEquals(r, Right(MultiQuery(NonEmptyList.one(expected))))
 
   test("parse single term with period") {
     val r = parseQ("typelevel.com")

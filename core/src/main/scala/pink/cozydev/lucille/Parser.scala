@@ -183,5 +183,6 @@ object Parser {
   val fullQuery = nonGrouped(recursiveQ)
 
   // TODO we need to deal with the trailing whitespace now that we support groups
-  def parseQ(s: String) = fullQuery.parseAll(s.stripTrailing)
+  def parseQ(s: String): Either[cats.parse.Parser.Error, MultiQuery] =
+    fullQuery.parseAll(s.stripTrailing).map(MultiQuery.apply)
 }
