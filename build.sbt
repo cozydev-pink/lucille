@@ -22,6 +22,7 @@ ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // use JDK 11
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11"))
+ThisBuild / tlJdkRelease := Some(11)
 
 val Scala212 = "2.12.17"
 val Scala213 = "2.13.10"
@@ -42,4 +43,32 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     ),
   )
 
-lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
+import laika.ast.Path.Root
+import laika.helium.config.{IconLink, HeliumIcon, TextLink, ThemeNavigationSection}
+import cats.data.NonEmptyList
+lazy val docs = project
+  .in(file("site"))
+  .enablePlugins(TypelevelSitePlugin)
+  .dependsOn(core.jvm)
+  .settings(
+    tlSiteApiPackage := Some("lucille"),
+    tlSiteHelium := {
+      tlSiteHelium.value.site.darkMode.disabled.site
+        .topNavigationBar(
+          homeLink = IconLink.external("https://github.com/cozydev-pink/lucille", HeliumIcon.home)
+        )
+        .site
+        .mainNavigation(
+          appendLinks = Seq(
+            ThemeNavigationSection(
+              "Related Projects",
+              NonEmptyList.of(
+                TextLink.external("https://lucene.apache.org/", "lucene"),
+                TextLink.external("https://typelevel.org/cats-parse/", "cats-parse"),
+                TextLink.external("https://typelevel.org/cats/", "cats"),
+              ),
+            )
+          )
+        )
+    },
+  )

@@ -28,7 +28,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Term("test"))
+        MultiQuery(Term("test"))
       ),
     )
   }
@@ -38,7 +38,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Term("test"), Term("equipment"))
+        MultiQuery(Term("test"), Term("equipment"))
       ),
     )
   }
@@ -48,7 +48,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Proximity("test failure", 4))
+        MultiQuery(Proximity("test failure", 4))
       ),
     )
   }
@@ -58,7 +58,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Prefix("tes"))
+        MultiQuery(Prefix("tes"))
       ),
     )
   }
@@ -68,7 +68,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(TermRegex(".est(s|ing)"))
+        MultiQuery(TermRegex(".est(s|ing)"))
       ),
     )
   }
@@ -78,7 +78,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Fuzzy("nest", Some(4)))
+        MultiQuery(Fuzzy("nest", Some(4)))
       ),
     )
   }
@@ -88,7 +88,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Field("title", Term("test")))
+        MultiQuery(Field("title", Term("test")))
       ),
     )
   }
@@ -98,7 +98,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Field("title", Group(Or(Term("die"), Term("hard"))))
         )
       ),
@@ -110,7 +110,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(And(Term("test"), Term("results")))
+        MultiQuery(And(Term("test"), Term("results")))
       ),
     )
   }
@@ -120,7 +120,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(
             Field("title", Term("test")),
             Not(Field("title", Term("complete"))),
@@ -135,7 +135,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(
             Field("title", Term("test")),
             Group(
@@ -155,7 +155,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Field("title", Group(Term("pass"), Term("fail"), Term("skip")))
         )
       ),
@@ -167,7 +167,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Field(
             "title",
             Group(
@@ -184,7 +184,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("name:[Jones TO Smith]")
     assertEquals(
       r,
-      Right(NonEmptyList.of(Field("name", TermRange(Some("Jones"), Some("Smith"), true, true)))),
+      Right(MultiQuery(Field("name", TermRange(Some("Jones"), Some("Smith"), true, true)))),
     )
   }
 
@@ -192,7 +192,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("score:{2.5 TO 7.3}")
     assertEquals(
       r,
-      Right(NonEmptyList.of(Field("score", TermRange(Some("2.5"), Some("7.3"), false, false)))),
+      Right(MultiQuery(Field("score", TermRange(Some("2.5"), Some("7.3"), false, false)))),
     )
   }
 
@@ -200,7 +200,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("score:{2.5 TO *]")
     assertEquals(
       r,
-      Right(NonEmptyList.of(Field("score", TermRange(Some("2.5"), None, false, true)))),
+      Right(MultiQuery(Field("score", TermRange(Some("2.5"), None, false, true)))),
     )
   }
 
@@ -224,7 +224,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           MinimumMatch(NonEmptyList.of(Term("blue"), Term("crab"), Term("fish")), 2)
         )
       ),
@@ -236,7 +236,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           MinimumMatch(
             NonEmptyList.of(
               Group(

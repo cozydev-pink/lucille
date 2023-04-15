@@ -22,10 +22,10 @@ import Parser._
 
 class RegexSuite extends munit.FunSuite {
 
-  def assertSingleQ(r: Either[Error, NonEmptyList[Query]], expected: Query)(implicit
+  def assertSingleQ(r: Either[Error, MultiQuery], expected: Query)(implicit
       loc: munit.Location
   ) =
-    assertEquals(r, Right(NonEmptyList.one(expected)))
+    assertEquals(r, Right(MultiQuery(NonEmptyList.one(expected))))
 
   test("parse single regex with wildcard star") {
     val r = parseQ("/jump.*/")

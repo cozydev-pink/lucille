@@ -22,8 +22,10 @@ import Parser._
 
 class SingleSimpleQuerySuite extends munit.FunSuite {
 
-  def assertSingleTerm(r: Either[Error, NonEmptyList[Query]], expected: Query) =
-    assertEquals(r, Right(NonEmptyList.of(expected)))
+  def assertSingleTerm(r: Either[Error, MultiQuery], expected: Query)(implicit
+      loc: munit.Location
+  ) =
+    assertEquals(r, Right(MultiQuery(expected)))
 
   test("parse single term") {
     val r = parseQ("the")
@@ -67,7 +69,7 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
 
   test("parse field query with phrase") {
     val r = parseQ("fieldName:\"The cat jumped\"")
-    assertEquals(r, Right(NonEmptyList.of(Field("fieldName", Phrase("The cat jumped")))))
+    assertEquals(r, Right(MultiQuery(Field("fieldName", Phrase("The cat jumped")))))
   }
 
   test("parse single term with numbers") {
@@ -101,25 +103,25 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
 
   test("parse multiple terms completely") {
     val r = parseQ("The cat jumped")
-    assertEquals(r, Right(NonEmptyList.of(Term("The"), Term("cat"), Term("jumped"))))
+    assertEquals(r, Right(MultiQuery(Term("The"), Term("cat"), Term("jumped"))))
   }
 
   test("parse multiple terms with lots of spaces completely") {
     val r = parseQ("The cat   jumped   ")
-    assertEquals(r, Right(NonEmptyList.of(Term("The"), Term("cat"), Term("jumped"))))
+    assertEquals(r, Right(MultiQuery(Term("The"), Term("cat"), Term("jumped"))))
   }
 
   test("parse field query and terms completely") {
     val r = parseQ("fieldName:The cat jumped")
     assertEquals(
       r,
-      Right(NonEmptyList.of(Field("fieldName", Term("The")), Term("cat"), Term("jumped"))),
+      Right(MultiQuery(Field("fieldName", Term("The")), Term("cat"), Term("jumped"))),
     )
   }
 
   test("parse proximity query completely") {
     val r = parseQ("\"derp lerp\"~3")
-    assertEquals(r, Right(NonEmptyList.of(Proximity("derp lerp", 3))))
+    assertEquals(r, Right(MultiQuery(Proximity("derp lerp", 3))))
   }
 
   test("parse proximity with decimal does not parse") {
@@ -129,12 +131,12 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
 
   test("parse fuzzy term without number parses completely") {
     val r = parseQ("derp~")
-    assertEquals(r, Right(NonEmptyList.of(Fuzzy("derp", None))))
+    assertEquals(r, Right(MultiQuery(Fuzzy("derp", None))))
   }
 
   test("parse fuzzy term with number parses completely") {
     val r = parseQ("derp~2")
-    assertEquals(r, Right(NonEmptyList.of(Fuzzy("derp", Some(2)))))
+    assertEquals(r, Right(MultiQuery(Fuzzy("derp", Some(2)))))
   }
 
   test("parse fuzzy term with decimal does not parse") {
@@ -150,7 +152,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Or(Term("derp"), Term("lerp"))
         )
       ),
@@ -162,7 +164,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Or(Term("derp"), Term("lerp"), Term("slerp"))
         )
       ),
@@ -174,7 +176,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Or(Term("derp"), Phrase("lerp slerp"))
         )
       ),
@@ -216,7 +218,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(Term("derp"), Term("lerp"))
         )
       ),
@@ -228,7 +230,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Term("term"),
           Or(Term("derp"), Term("lerp")),
         )
@@ -241,7 +243,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Or(Term("derp"), Term("lerp")),
           Term("slerp"),
         )
@@ -254,7 +256,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(Term("derp"), Term("lerp")),
           Term("slerp"),
         )
@@ -267,7 +269,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(Term("derp"), Phrase("lerp slerp"))
         )
       ),
@@ -279,7 +281,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(Term("derp"), Phrase("lerp slerp"))
         )
       ),
@@ -291,7 +293,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(Term("derp"), Term("lerp")),
           Term("slerp"),
           Or(Term("orA"), Term("orB")),
@@ -306,7 +308,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Not(Term("derp"))
         )
       ),
@@ -318,7 +320,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(Term("derp"), Not(Term("lerp")))
         )
       ),
@@ -333,7 +335,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(Term("The"), Term("cat"), Term("jumped")))
+        MultiQuery(Group(Term("The"), Term("cat"), Term("jumped")))
       ),
     )
   }
@@ -343,7 +345,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(Term("The"), Term("cat"), Term("jumped")))
+        MultiQuery(Group(Term("The"), Term("cat"), Term("jumped")))
       ),
     )
   }
@@ -353,7 +355,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Term("animals"),
           Not(
             Group(And(Term("cats"), Term("dogs")))
@@ -368,7 +370,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           Field(
             "title",
             Group(And(Term("cats"), Term("dogs"))),
@@ -383,7 +385,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(
             Field("title", Term("test")),
             Group(
@@ -408,7 +410,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(Group(gq), Term("extra"))
+        MultiQuery(Group(gq), Term("extra"))
       ),
     )
   }
@@ -426,7 +428,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        NonEmptyList.of(
+        MultiQuery(
           And(
             Group(gq),
             Phrase("extra phrase"),
