@@ -27,6 +27,23 @@ final case class MultiQuery(qs: NonEmptyList[Query]) extends Query {
       val newT = qs.tail.init :+ f(qs.last)
       MultiQuery(NonEmptyList(qs.head, newT))
     }
+
+  def mapLastTerm(f: Query => Query): MultiQuery = {
+    val newLast: Query = qs.last match {
+      case q: Query.Or => q.mapLast(f)
+      case q: Query.And => q.mapLast(f)
+      case q: Query.Not => q.mapLast(f)
+      case q: Query.Group => q.mapLast(f)
+      case q: Query.Field => q.mapLast(f)
+      case q: MultiQuery => q.mapLast(f)
+      case q => f(q)
+    }
+    if (qs.size == 1) MultiQuery(NonEmptyList.one(newLast))
+    else {
+      val newT = qs.tail.init :+ newLast
+      MultiQuery(NonEmptyList(qs.head, newT))
+    }
+  }
 }
 object MultiQuery {
   def apply(head: Query, tail: Query*): MultiQuery =
@@ -65,7 +82,10 @@ object Query {
       And(NonEmptyList(head, tail.toList))
   }
 
-  final case class Not(q: Query) extends Query
+  final case class Not(q: Query) extends Query {
+    def mapLast(f: Query => Query): Not =
+      Not(f(q))
+  }
 
   final case class Group(qs: NonEmptyList[Query]) extends Query {
     def mapLast(f: Query => Query): Group =
@@ -79,12 +99,15 @@ object Query {
   final case class UnaryPlus(q: Query) extends Query
   final case class UnaryMinus(q: Query) extends Query
   final case class MinimumMatch(qs: NonEmptyList[Query], num: Int) extends Query
-  final case class Field(field: String, q: Query) extends Query
+  final case class Field(field: String, q: Query) extends Query {
+    def mapLast(f: Query => Query): Field =
+      Field(field, f(q))
+  }
 
-  private def rewriteLast(qs: NonEmptyList[Query], func: Query => Query): NonEmptyList[Query] =
-    if (qs.size == 1) NonEmptyList.one(func(qs.head))
+  private def rewriteLast(qs: NonEmptyList[Query], f: Query => Query): NonEmptyList[Query] =
+    if (qs.size == 1) NonEmptyList.one(f(qs.head))
     else {
-      val newT = qs.tail.init :+ func(qs.last)
+      val newT = qs.tail.init :+ f(qs.last)
       NonEmptyList(qs.head, newT)
     }
 }

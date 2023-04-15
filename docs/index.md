@@ -51,8 +51,9 @@ expanded term + prefix:
 Parser.parseQ("cats do").map(mq => mq.mapLast(expandQ))
 ```
 
-Unfortunately this doesn't currently work with the final term in a boolean query:
+However, this might not work as expected when the last term is part of a boolean or field query.
+For such use cases there is also `mapLastTerm` which will pass the function `f` down through boolean and field queries if they are in the last position.
 
 ```scala mdoc
-Parser.parseQ("cats OR do").map(mq => mq.mapLast(expandQ))
+Parser.parseQ("cats OR do").map(mq => mq.mapLastTerm(expandQ))
 ```
