@@ -56,7 +56,7 @@ class QuerySuite extends munit.FunSuite {
     assertEquals(mq.mapLastTerm(expandQ), expected)
   }
 
-  test("MultiQuery.mapLastTerm maps last Term in last Query (OR + NOT)".fail) {
+  test("MultiQuery.mapLastTerm maps last Term in last Query (OR + NOT)") {
     val mq = MultiQuery(Or(Term("cats"), Not(Term("dogs"))))
     val expected = MultiQuery(Or(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs")))))
     assertEquals(mq.mapLastTerm(expandQ), expected)
