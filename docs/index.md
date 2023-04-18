@@ -44,16 +44,15 @@ def expandQ(q: Query): Query =
   }
 ```
 
-We can now use `expandQ` along with `mapLast` to rewrite the last term of a `MultiQuery` into our
+We can now use `expandQ` along with `mapLastTerm` to rewrite the last term of a `MultiQuery` into our
 expanded term + prefix:
 
 ```scala mdoc
-Parser.parseQ("cats do").map(mq => mq.mapLast(expandQ))
+Parser.parseQ("cats meo").map(mq => mq.mapLastTerm(expandQ))
 ```
 
-However, this might not work as expected when the last term is part of a boolean or field query.
-For such use cases there is also `mapLastTerm` which will pass the function `f` down through boolean and field queries if they are in the last position.
+This also works when the last term is part of a boolean or field query.
 
 ```scala mdoc
-Parser.parseQ("cats OR do").map(mq => mq.mapLastTerm(expandQ))
+Parser.parseQ("cats AND do").map(mq => mq.mapLastTerm(expandQ))
 ```

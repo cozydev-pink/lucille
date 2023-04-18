@@ -28,12 +28,6 @@ sealed trait TermQuery extends Query {
 }
 
 final case class MultiQuery(qs: NonEmptyList[Query]) extends Query {
-  def mapLast(f: Query => Query): MultiQuery =
-    if (qs.size == 1) MultiQuery(NonEmptyList.one(f(qs.head)))
-    else {
-      val newT = qs.tail.init :+ f(qs.last)
-      MultiQuery(NonEmptyList(qs.head, newT))
-    }
 
   def mapLastTerm(f: TermQuery => Query): MultiQuery = {
     val newLast: Query = qs.last.mapLastTerm(f)
@@ -64,8 +58,6 @@ object Query {
   ) extends TermQuery
 
   final case class Or(qs: NonEmptyList[Query]) extends Query {
-    def mapLast(f: Query => Query): Or =
-      Or(rewriteLast(qs, f))
     def mapLastTerm(f: TermQuery => Query): Or =
       Or(rewriteLastTerm(qs, f))
   }
@@ -75,8 +67,6 @@ object Query {
   }
 
   final case class And(qs: NonEmptyList[Query]) extends Query {
-    def mapLast(f: Query => Query): And =
-      And(rewriteLast(qs, f))
     def mapLastTerm(f: TermQuery => Query): And =
       And(rewriteLastTerm(qs, f))
   }
@@ -86,15 +76,11 @@ object Query {
   }
 
   final case class Not(q: Query) extends Query {
-    def mapLast(f: Query => Query): Not =
-      Not(f(q))
     def mapLastTerm(f: TermQuery => Query): Not =
       Not(q.mapLastTerm(f))
   }
 
   final case class Group(qs: NonEmptyList[Query]) extends Query {
-    def mapLast(f: Query => Query): Group =
-      Group(rewriteLast(qs, f))
     def mapLastTerm(f: TermQuery => Query): Group =
       Group(rewriteLastTerm(qs, f))
   }
@@ -116,18 +102,9 @@ object Query {
       MinimumMatch(rewriteLastTerm(qs, f), num)
   }
   final case class Field(field: String, q: Query) extends Query {
-    def mapLast(f: Query => Query): Field =
-      Field(field, f(q))
     def mapLastTerm(f: TermQuery => Query): Field =
       Field(field, q.mapLastTerm(f))
   }
-
-  private def rewriteLast(qs: NonEmptyList[Query], f: Query => Query): NonEmptyList[Query] =
-    if (qs.size == 1) NonEmptyList.one(f(qs.head))
-    else {
-      val newT = qs.tail.init :+ f(qs.last)
-      NonEmptyList(qs.head, newT)
-    }
 
   private def rewriteLastTerm(qs: NonEmptyList[Query], f: TermQuery => Query): NonEmptyList[Query] =
     if (qs.size == 1) NonEmptyList.one(qs.head.mapLastTerm(f))

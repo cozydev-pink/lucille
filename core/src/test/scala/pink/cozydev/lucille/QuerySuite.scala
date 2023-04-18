@@ -25,19 +25,6 @@ class QuerySuite extends munit.FunSuite {
       case _ => q
     }
 
-  test("MultiQuery.mapLast maps last Query") {
-    val mq = MultiQuery(Term("cats"), Term("dogs"))
-    val expected = MultiQuery(Term("cats"), Or(Term("dogs"), Prefix("dogs")))
-    assertEquals(mq.mapLast(expandQ), expected)
-  }
-
-  test(
-    "MultiQuery.mapLast does not apply `f` to Term queries within boolean queries in last position"
-  ) {
-    val mq = MultiQuery(Or(Term("cats"), Term("dogs")))
-    assertEquals(mq.mapLast(expandQ), mq)
-  }
-
   test("MultiQuery.mapLastTerm maps last Term in last Query (OR)") {
     val mq = MultiQuery(Or(Term("cats"), Term("dogs")))
     val expected = MultiQuery(Or(Term("cats"), Or(Term("dogs"), Prefix("dogs"))))
