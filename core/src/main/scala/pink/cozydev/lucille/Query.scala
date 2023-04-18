@@ -19,6 +19,12 @@ package pink.cozydev.lucille
 import cats.data.NonEmptyList
 
 sealed trait Query extends Product with Serializable {
+
+  /** Builds a new query by applying a `TermQuery => Query` function to the last TermQuery.
+    *
+    * @param f the function to apply to the last TermQuery
+    * @return
+    */
   def mapLastTerm(f: TermQuery => Query): Query
 }
 
