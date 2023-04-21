@@ -40,7 +40,8 @@ object Parser {
 
   // Term query
   // e.g. 'cat', 'catch22'
-  val term: P[String] = P.not(P.stringIn(reserved)).with1 *> allowed.rep.string
+  val term: P[String] =
+    P.not(P.stringIn(reserved).withContext("reserved")).with1 *> allowed.rep.string
   val termQ: P[Term] = term.map(Term.apply)
 
   // Phrase query
@@ -79,20 +80,20 @@ object Parser {
 
   val or = (P.string("OR") | P.string("||")).as(Op.OR)
   val and = (P.string("AND") | P.string("&&")).as(Op.AND)
-  val infixOp = or | and
+  val infixOp = (or | and).withContext("infixOp")
 
   // given "  OR term1 OR   term2$"
   // parses completely
   // given "  OR term1 OR   term2 extra$"
   // parses until the end of 'term2', with 'extra' being left
   def suffixOps(query: P[Query]): Parser0[List[(Op, Query)]] =
-    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ query)
-      .repUntil0(maybeSpace.with1 *> query)
+    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ query.withContext("rep suffix ops"))
+      .repUntil0(maybeSpace *> (P.end | query.withContext("end suffix ops")))
 
   // parse simple queries followed by suffix op queries
   // "q0 q1 OR q2"
   def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
-    (query.repSep(sp.rep) ~ suffixOps(query))
+    (query.withContext("init rep query").repSep(sp.rep) ~ suffixOps(query))
       .map { case (h, t) => Op.associateOps(h, t) }
 
   // parse a whole list of queries
@@ -100,7 +101,7 @@ object Parser {
   // we repeat so that we can parse q3
   // the first iteration only gets "qp q1 OR q2"
   def nonGrouped(query: P[Query]): P[NonEmptyList[Query]] =
-    (maybeSpace.with1 *> qWithSuffixOps(query)).rep.map(_.flatten)
+    (maybeSpace.with1 *> qWithSuffixOps(query)).repUntil(maybeSpace ~ P.end).map(_.flatten)
 
   // Not query
   // e.g. 'animals NOT (cats AND dogs)'
@@ -153,35 +154,43 @@ object Parser {
       .map { case ((((il, l), _), u), iu) =>
         TermRange(l, u, il, iu)
       }
-  }
+  }.withContext("range query")
 
   // Tie compound queries together recursively
   // Order is very important here
   // prefixT before termQ
-  val recursiveQ: P[Query] = P.recursive[Query](r =>
-    P.oneOf(
-      List(
-        unaryPlus(r),
-        unaryMinus(r),
-        notQ(r),
-        fieldQuery(r),
-        proximityQ,
-        rangeQuery,
-        fuzzyT,
-        prefixT,
-        termQ,
-        regexQ,
-        phraseQ,
-        minimumMatchQ(r),
-        groupQ(r),
+  val recursiveQ: P[Query] = P
+    .recursive[Query](r =>
+      P.oneOf(
+        List(
+          unaryPlus(r),
+          unaryMinus(r),
+          notQ(r),
+          fieldQuery(r),
+          proximityQ,
+          rangeQuery,
+          fuzzyT,
+          prefixT,
+          termQ,
+          regexQ,
+          phraseQ,
+          minimumMatchQ(r),
+          groupQ(r),
+        )
       )
     )
-  )
+    .withContext("recursiveQ")
 
   // One or more queries implicitly grouped together in a list
   val fullQuery = nonGrouped(recursiveQ)
 
-  // TODO we need to deal with the trailing whitespace now that we support groups
+  val whitespace: P[Unit] = P.charIn(Set(' ', '\t', '\n', '\f', '\r')).rep.void
   def parseQ(s: String): Either[cats.parse.Parser.Error, MultiQuery] =
-    fullQuery.parseAll(s.stripTrailing).map(MultiQuery.apply)
+    fullQuery
+      .parse(s)
+      .flatMap { case (r, q) =>
+        if (r.isEmpty()) Right(MultiQuery(q))
+        else
+          whitespace.withContext("remainder").parseAll(r).as(MultiQuery(q))
+      }
 }
