@@ -87,13 +87,13 @@ object Parser {
   // given "  OR term1 OR   term2 extra$"
   // parses until the end of 'term2', with 'extra' being left
   def suffixOps(query: P[Query]): Parser0[List[(Op, Query)]] =
-    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ query.withContext("rep suffix ops"))
-      .repUntil0(maybeSpace *> (P.end | query.withContext("end suffix ops")))
+    ((maybeSpace.with1 *> infixOp <* sp.rep) ~ query)
+      .repUntil0(maybeSpace *> (P.end | query))
 
   // parse simple queries followed by suffix op queries
   // "q0 q1 OR q2"
   def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
-    (query.withContext("init rep query").repSep(sp.rep) ~ suffixOps(query))
+    (query.repSep(sp.rep) ~ suffixOps(query))
       .map { case (h, t) => Op.associateOps(h, t) }
 
   // parse a whole list of queries
@@ -159,27 +159,25 @@ object Parser {
   // Tie compound queries together recursively
   // Order is very important here
   // prefixT before termQ
-  val recursiveQ: P[Query] = P
-    .recursive[Query](r =>
-      P.oneOf(
-        List(
-          unaryPlus(r),
-          unaryMinus(r),
-          notQ(r),
-          fieldQuery(r),
-          proximityQ,
-          rangeQuery,
-          fuzzyT,
-          prefixT,
-          termQ,
-          regexQ,
-          phraseQ,
-          minimumMatchQ(r),
-          groupQ(r),
-        )
+  val recursiveQ: P[Query] = P.recursive[Query](r =>
+    P.oneOf(
+      List(
+        unaryPlus(r),
+        unaryMinus(r),
+        notQ(r),
+        fieldQuery(r),
+        proximityQ,
+        rangeQuery,
+        fuzzyT,
+        prefixT,
+        termQ,
+        regexQ,
+        phraseQ,
+        minimumMatchQ(r),
+        groupQ(r),
       )
     )
-    .withContext("recursiveQ")
+  )
 
   // One or more queries implicitly grouped together in a list
   val fullQuery = nonGrouped(recursiveQ)
