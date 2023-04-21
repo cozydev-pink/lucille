@@ -40,8 +40,7 @@ object Parser {
 
   // Term query
   // e.g. 'cat', 'catch22'
-  val term: P[String] =
-    P.not(P.stringIn(reserved).withContext("reserved")).with1 *> allowed.rep.string
+  val term: P[String] = P.not(P.stringIn(reserved)).with1 *> allowed.rep.string
   val termQ: P[Term] = term.map(Term.apply)
 
   // Phrase query
@@ -154,7 +153,7 @@ object Parser {
       .map { case ((((il, l), _), u), iu) =>
         TermRange(l, u, il, iu)
       }
-  }.withContext("range query")
+  }
 
   // Tie compound queries together recursively
   // Order is very important here
