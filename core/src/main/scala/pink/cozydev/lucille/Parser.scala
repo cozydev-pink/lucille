@@ -179,15 +179,8 @@ object Parser {
   )
 
   // One or more queries implicitly grouped together in a list
-  val fullQuery = nonGrouped(recursiveQ)
+  val fullQuery = nonGrouped(recursiveQ) <* maybeSpace
 
-  val whitespace: P[Unit] = P.charIn(Set(' ', '\t', '\n', '\f', '\r')).rep.void
   def parseQ(s: String): Either[cats.parse.Parser.Error, MultiQuery] =
-    fullQuery
-      .parse(s)
-      .flatMap { case (r, q) =>
-        if (r.isEmpty()) Right(MultiQuery(q))
-        else
-          whitespace.withContext("remainder").parseAll(r).as(MultiQuery(q))
-      }
+    fullQuery.parseAll(s).map(MultiQuery.apply)
 }
