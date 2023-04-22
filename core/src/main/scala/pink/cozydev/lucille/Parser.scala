@@ -79,7 +79,7 @@ object Parser {
 
   val or = (P.string("OR") | P.string("||")).as(Op.OR)
   val and = (P.string("AND") | P.string("&&")).as(Op.AND)
-  val infixOp = or | and
+  val infixOp = (or | and).withContext("infixOp")
 
   // given "  OR term1 OR   term2$"
   // parses completely
@@ -87,7 +87,7 @@ object Parser {
   // parses until the end of 'term2', with 'extra' being left
   def suffixOps(query: P[Query]): Parser0[List[(Op, Query)]] =
     ((maybeSpace.with1 *> infixOp <* sp.rep) ~ query)
-      .repUntil0(maybeSpace.with1 *> query)
+      .repUntil0(maybeSpace *> (P.end | query))
 
   // parse simple queries followed by suffix op queries
   // "q0 q1 OR q2"
@@ -100,7 +100,7 @@ object Parser {
   // we repeat so that we can parse q3
   // the first iteration only gets "qp q1 OR q2"
   def nonGrouped(query: P[Query]): P[NonEmptyList[Query]] =
-    (maybeSpace.with1 *> qWithSuffixOps(query)).rep.map(_.flatten)
+    (maybeSpace.with1 *> qWithSuffixOps(query)).repUntil(maybeSpace ~ P.end).map(_.flatten)
 
   // Not query
   // e.g. 'animals NOT (cats AND dogs)'
@@ -179,9 +179,8 @@ object Parser {
   )
 
   // One or more queries implicitly grouped together in a list
-  val fullQuery = nonGrouped(recursiveQ)
+  val fullQuery = nonGrouped(recursiveQ) <* maybeSpace
 
-  // TODO we need to deal with the trailing whitespace now that we support groups
   def parseQ(s: String): Either[cats.parse.Parser.Error, MultiQuery] =
-    fullQuery.parseAll(s.stripTrailing).map(MultiQuery.apply)
+    fullQuery.parseAll(s).map(MultiQuery.apply)
 }
