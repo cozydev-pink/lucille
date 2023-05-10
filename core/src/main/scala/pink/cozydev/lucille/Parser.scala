@@ -26,13 +26,13 @@ import cats.syntax.all._
 object Parser {
   import Query._
 
-  val dquote = pchar('"')
+  val dquote = P.charIn(Set('"', '“', '”'))
   val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
   val maybeSpace: Parser0[Unit] = spaces.?.void
   val int: P[Int] = (digit.rep <* P.not(P.char('.'))).string.map(_.toInt)
 
   private val baseRange = (0x20.toChar to 0x10ffff.toChar).toSet
-  private val special = Set('\\', ':', '^', '(', ')', '"', ' ', '*', '~')
+  private val special = Set('\\', ':', '^', '(', ')', '"', '“', '”', ' ', '*', '~')
   private val allowed: P[Char] =
     // From cats.parse.strings.Json nonEscaped handling
     P.charIn(baseRange -- special)
