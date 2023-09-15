@@ -48,4 +48,22 @@ class QuerySuite extends munit.FunSuite {
     val expected = MultiQuery(Or(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs")))))
     assertEquals(mq.mapLastTerm(expandQ), expected)
   }
+
+  test("MultiQuery.mapLastTerm does nothing for ending minimum-should-match query") {
+    val qs = "(apple banana orange)@2"
+    val mq = Parser.parseQ(qs)
+    assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
+  }
+
+  test("MultiQuery.mapLastTerm does nothing for ending range query") {
+    val qs = "name:[cats TO fs2]"
+    val mq = Parser.parseQ(qs)
+    assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
+  }
+
+  test("MultiQuery.mapLastTerm does nothing for ending group query") {
+    val qs = "cats AND (dogs OR fish)"
+    val mq = Parser.parseQ(qs)
+    assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
+  }
 }

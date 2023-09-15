@@ -20,22 +20,22 @@ import cats.data.NonEmptyList
 
 sealed trait Query extends Product with Serializable {
 
-  /** Builds a new query by applying a `TermQuery => Query` function to the last TermQuery.
+  /** Builds a new query by applying a `Term => Query` function to a Term if it is in the last position.
     *
     * @param f the function to apply to the last TermQuery
     * @return
     */
-  def mapLastTerm(f: TermQuery => Query): Query
+  def mapLastTerm(f: Query.Term => Query): Query
 }
 
 sealed trait TermQuery extends Query {
-  def mapLastTerm(f: TermQuery => Query): Query =
-    f(this)
+  // noop for everything except Query.Term
+  def mapLastTerm(f: Query.Term => Query): Query = this
 }
 
 final case class MultiQuery(qs: NonEmptyList[Query]) extends Query {
 
-  def mapLastTerm(f: TermQuery => Query): MultiQuery = {
+  def mapLastTerm(f: Query.Term => Query): MultiQuery = {
     val newLast: Query = qs.last.mapLastTerm(f)
     if (qs.size == 1) MultiQuery(NonEmptyList.one(newLast))
     else {
@@ -50,7 +50,10 @@ object MultiQuery {
 }
 
 object Query {
-  final case class Term(str: String) extends TermQuery
+  final case class Term(str: String) extends TermQuery {
+    override def mapLastTerm(f: Query.Term => Query): Query =
+      f(this)
+  }
   final case class Phrase(str: String) extends TermQuery
   final case class Prefix(str: String) extends TermQuery
   final case class Proximity(str: String, num: Int) extends TermQuery
@@ -64,7 +67,7 @@ object Query {
   ) extends TermQuery
 
   final case class Or(qs: NonEmptyList[Query]) extends Query {
-    def mapLastTerm(f: TermQuery => Query): Or =
+    def mapLastTerm(f: Query.Term => Query): Or =
       Or(rewriteLastTerm(qs, f))
   }
   object Or {
@@ -73,7 +76,7 @@ object Query {
   }
 
   final case class And(qs: NonEmptyList[Query]) extends Query {
-    def mapLastTerm(f: TermQuery => Query): And =
+    def mapLastTerm(f: Query.Term => Query): And =
       And(rewriteLastTerm(qs, f))
   }
   object And {
@@ -82,13 +85,12 @@ object Query {
   }
 
   final case class Not(q: Query) extends Query {
-    def mapLastTerm(f: TermQuery => Query): Not =
+    def mapLastTerm(f: Query.Term => Query): Not =
       Not(q.mapLastTerm(f))
   }
 
   final case class Group(qs: NonEmptyList[Query]) extends Query {
-    def mapLastTerm(f: TermQuery => Query): Group =
-      Group(rewriteLastTerm(qs, f))
+    def mapLastTerm(f: Query.Term => Query): Group = this
   }
   object Group {
     def apply(head: Query, tail: Query*): Group =
@@ -96,23 +98,25 @@ object Query {
   }
 
   final case class UnaryPlus(q: Query) extends Query {
-    def mapLastTerm(f: TermQuery => Query): UnaryPlus =
+    def mapLastTerm(f: Query.Term => Query): UnaryPlus =
       UnaryPlus(q.mapLastTerm(f))
   }
   final case class UnaryMinus(q: Query) extends Query {
-    def mapLastTerm(f: TermQuery => Query): UnaryMinus =
+    def mapLastTerm(f: Query.Term => Query): UnaryMinus =
       UnaryMinus(q.mapLastTerm(f))
   }
   final case class MinimumMatch(qs: NonEmptyList[Query], num: Int) extends Query {
-    def mapLastTerm(f: TermQuery => Query): MinimumMatch =
-      MinimumMatch(rewriteLastTerm(qs, f), num)
+    def mapLastTerm(f: Query.Term => Query): MinimumMatch = this
   }
   final case class Field(field: String, q: Query) extends Query {
-    def mapLastTerm(f: TermQuery => Query): Field =
+    def mapLastTerm(f: Query.Term => Query): Field =
       Field(field, q.mapLastTerm(f))
   }
 
-  private def rewriteLastTerm(qs: NonEmptyList[Query], f: TermQuery => Query): NonEmptyList[Query] =
+  private def rewriteLastTerm(
+      qs: NonEmptyList[Query],
+      f: Query.Term => Query,
+  ): NonEmptyList[Query] =
     if (qs.size == 1) NonEmptyList.one(qs.head.mapLastTerm(f))
     else {
       val newT = qs.tail.init :+ qs.last.mapLastTerm(f)
