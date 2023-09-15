@@ -17,7 +17,6 @@
 package pink.cozydev.lucille
 
 import pink.cozydev.lucille.Query._
-import pink.cozydev.lucille.Parser
 
 class QuerySuite extends munit.FunSuite {
   def expandQ(q: Query): Query =
