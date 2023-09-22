@@ -17,7 +17,6 @@
 package pink.cozydev.lucille
 
 import cats.data.NonEmptyList
-import scala.annotation.meta.field
 
 /** A trait for all queries */
 sealed trait Query extends Product with Serializable {
