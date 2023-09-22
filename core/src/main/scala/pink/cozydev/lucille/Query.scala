@@ -35,7 +35,10 @@ sealed trait TermQuery extends Query {
   def mapLastTerm(f: Query.Term => Query): Query = this
 }
 
-/** A trait for a list of one or more queries */
+/** A trait for a list of one or more queries
+  *
+  * @param qs the queries
+  */
 final case class MultiQuery(qs: NonEmptyList[Query]) extends Query {
 
   def mapLastTerm(f: Query.Term => Query): MultiQuery = {
@@ -56,6 +59,8 @@ object Query {
 
   /** A term query
     * e.g. 'cat', 'catch22'
+    *
+    *  @param str the term
     */
   final case class Term(str: String) extends TermQuery {
     override def mapLastTerm(f: Query.Term => Query): Query =
@@ -64,18 +69,25 @@ object Query {
 
   /** A phrase query
     * e.g. 'the cat jumped'
+    *
+    * @param str the phrase
     */
   final case class Phrase(str: String) extends TermQuery
 
   /** A prefix query
     * Search for words starting with the given prefix
     * e.g. 'jump*'
+    *
+    * @param str the prefix
     */
   final case class Prefix(str: String) extends TermQuery
 
   /** A proximity query
     * Search for words within a specified word distance
     * e.g. '"cat jumped"~3', '"one two three"~2'
+    *
+    * @param str the words
+    * @param num the word distance
     */
   final case class Proximity(str: String, num: Int) extends TermQuery
 
@@ -83,18 +95,28 @@ object Query {
     * Search for words within a Damerau-Levenshtein Distance
     * The additional parameter, between 0 and 2, specifies the number of edits allowed (defaults to 2)
     * e.g. 'cat~', 'cat~1'
+    *
+    * @param str the string
+    * @param num the number of edits allowed
     */
   final case class Fuzzy(str: String, num: Option[Int]) extends TermQuery
 
   /** A regex query
     * Search with a regular expression, the pattern is given between forward slashes, `/`.
     * e.g. '/.ump(s|ing)'
+    *
+    * @param str the regular expression query
     */
   final case class TermRegex(str: String) extends TermQuery
 
   /** A range query
     * Search for terms that fall between some upper and lower bounds. The bounds can be inclusive or exclusive.
     * e.g. '{cats TO dogs}', '[1 TO *]'
+    *
+    * @param lower the lower bound
+    * @param upper the upper bound
+    * @param lowerInc whether the lower bound is inclusive
+    * @param upperInc whether the upper bound is inclusive
     */
   final case class TermRange(
       lower: Option[String],
@@ -106,6 +128,8 @@ object Query {
   /** An Or operator
     * Join the given queries with OR, the equivalent of taking the union of the results of each query
     * e.g. 'q1 OR q2'
+    *
+    * @param qs the queries to union
     */
   final case class Or(qs: NonEmptyList[Query]) extends Query {
     def mapLastTerm(f: Query.Term => Query): Or =
@@ -119,6 +143,8 @@ object Query {
   /**  An And operator
     * Join the given queries with AND, the equivalent of taking the intersection of the results of each query
     * e.g. 'q1 AND q2'
+    *
+    * @param qs the queries to intersect
     */
   final case class And(qs: NonEmptyList[Query]) extends Query {
     def mapLastTerm(f: Query.Term => Query): And =
@@ -132,6 +158,8 @@ object Query {
   /** A Not operator
     * Exclude terms that would match the given query
     * e.g. 'NOT cats'
+    *
+    * @param q the query to exclude
     */
   final case class Not(q: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): Not =
@@ -141,6 +169,8 @@ object Query {
   /** A group query
     * Queries grouped together with parentheses
     * e.g. '(cats AND dogs)'
+    *
+    * @param qs the queries to group
     */
   final case class Group(qs: NonEmptyList[Query]) extends Query {
     def mapLastTerm(f: Query.Term => Query): Group = this
@@ -153,6 +183,8 @@ object Query {
   /** A unary plus query
     * Search for documents which must contain the given query
     * e.g. '+cat', '+(cats AND dogs)'
+    *
+    * @param q the query
     */
   final case class UnaryPlus(q: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): UnaryPlus =
@@ -162,6 +194,8 @@ object Query {
   /** A unary minus query
     * Search for documents which must not contain the given query
     * e.g. '-cat', '-(cats AND dogs)'
+    *
+    * @param q the query
     */
   final case class UnaryMinus(q: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): UnaryMinus =
@@ -171,6 +205,9 @@ object Query {
   /** A minimum match query
     * Search for documents that match at least `num` of the given queries
     * e.g. '(one two three)@2'
+    *
+    * @param qs the queries
+    * @param num the number of queries that must match
     */
   final case class MinimumMatch(qs: NonEmptyList[Query], num: Int) extends Query {
     def mapLastTerm(f: Query.Term => Query): MinimumMatch = this
@@ -179,6 +216,9 @@ object Query {
   /** A field query
     * Search for documents by applying the given query only to the named field
     * e.g. 'author:"Silly Goose"', 'title:(cats AND dogs)'
+    *
+    * @param field the field name
+    * @param q the query
     */
   final case class Field(field: String, q: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): Field =
