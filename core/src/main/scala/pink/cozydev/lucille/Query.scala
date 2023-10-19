@@ -91,9 +91,7 @@ object Query {
     */
   final case class Proximity(str: String, num: Int) extends TermQuery
 
-  /** A fuzzy query
-    * Search for words within a Damerau-Levenshtein Distance
-    * The additional parameter, between 0 and 2, specifies the number of edits allowed (defaults to 2)
+  /** A fuzzy query with an optional distance value
     * e.g. 'cat~', 'cat~1'
     *
     * @param str the string
