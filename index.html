@@ -103,17 +103,17 @@
         <p>Additionally, it&#39;s available for the JVM, Scala.js, and Scala Native.</p>
         <p>To use the latest version, include the following in your <code>build.sbt</code>:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="comment">// use this snippet for the JVM
-</span><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;pink.cozydev&quot;</span><span> %% </span><span class="string-literal">&quot;lucille&quot;</span><span> % </span><span class="string-literal">&quot;0.0-a3a14f6-SNAPSHOT&quot;</span><span>
+</span><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;pink.cozydev&quot;</span><span> %% </span><span class="string-literal">&quot;lucille&quot;</span><span> % </span><span class="string-literal">&quot;0.0-81076f3-SNAPSHOT&quot;</span><span>
 
 </span><span class="comment">// use this snippet for JS, Native, or cross-building
-</span><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;pink.cozydev&quot;</span><span> %%% </span><span class="string-literal">&quot;lucille&quot;</span><span> % </span><span class="string-literal">&quot;0.0-a3a14f6-SNAPSHOT&quot;</span></code></pre>
+</span><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;pink.cozydev&quot;</span><span> %%% </span><span class="string-literal">&quot;lucille&quot;</span><span> % </span><span class="string-literal">&quot;0.0-81076f3-SNAPSHOT&quot;</span></code></pre>
         
         <h3 id="parsing" class="section"><a class="anchor-link left" href="#parsing"><i class="icofont-laika link">&#xef71;</i></a>Parsing</h3>
         <p>Lucille offers a <code>parseQ</code> function to parse all of a string into a Lucille <code>MultiQuery</code> structure:</p>
-        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">pink</span><span>.</span><span class="identifier">cozydev</span><span>.</span><span class="identifier">lucille</span><span>.</span><span class="type-name">Parser</span><span>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">pink</span><span>.</span><span class="identifier">cozydev</span><span>.</span><span class="identifier">lucille</span><span>.</span><span class="type-name">QueryParser</span><span>
 
-</span><span class="type-name">Parser</span><span>.</span><span class="identifier">parseQ</span><span>(</span><span class="string-literal">&quot;cats OR dogs&quot;</span><span>)
-</span><span class="comment">// res0: Either[cats.parse.Parser.Error, pink.cozydev.lucille.MultiQuery] = Right(
+</span><span class="type-name">QueryParser</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats OR dogs&quot;</span><span>)
+</span><span class="comment">// res0: Either[String, pink.cozydev.lucille.MultiQuery] = Right(
 //   value = MultiQuery(
 //     qs = NonEmptyList(
 //       head = Or(
@@ -141,8 +141,8 @@
   }</span></code></pre>
         <p>We can now use <code>expandQ</code> along with <code>mapLastTerm</code> to rewrite the last term of a <code>MultiQuery</code> into our
         expanded term + prefix:</p>
-        <pre><code class="nohighlight"><span class="type-name">Parser</span><span>.</span><span class="identifier">parseQ</span><span>(</span><span class="string-literal">&quot;cats meo&quot;</span><span>).</span><span class="identifier">map</span><span>(</span><span class="identifier">mq</span><span> =&gt; </span><span class="identifier">mq</span><span>.</span><span class="identifier">mapLastTerm</span><span>(</span><span class="identifier">expandQ</span><span>))
-</span><span class="comment">// res1: Either[cats.parse.Parser.Error, pink.cozydev.lucille.MultiQuery] = Right(
+        <pre><code class="nohighlight"><span class="type-name">QueryParser</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats meo&quot;</span><span>).</span><span class="identifier">map</span><span>(</span><span class="identifier">mq</span><span> =&gt; </span><span class="identifier">mq</span><span>.</span><span class="identifier">mapLastTerm</span><span>(</span><span class="identifier">expandQ</span><span>))
+</span><span class="comment">// res1: Either[String, pink.cozydev.lucille.MultiQuery] = Right(
 //   value = MultiQuery(
 //     qs = NonEmptyList(
 //       head = Term(str = &quot;cats&quot;),
@@ -158,8 +158,8 @@
 //   )
 // )</span></code></pre>
         <p>This also works when the last term is part of a boolean or field query.</p>
-        <pre><code class="nohighlight"><span class="type-name">Parser</span><span>.</span><span class="identifier">parseQ</span><span>(</span><span class="string-literal">&quot;cats AND do&quot;</span><span>).</span><span class="identifier">map</span><span>(</span><span class="identifier">mq</span><span> =&gt; </span><span class="identifier">mq</span><span>.</span><span class="identifier">mapLastTerm</span><span>(</span><span class="identifier">expandQ</span><span>))
-</span><span class="comment">// res2: Either[cats.parse.Parser.Error, pink.cozydev.lucille.MultiQuery] = Right(
+        <pre><code class="nohighlight"><span class="type-name">QueryParser</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats AND do&quot;</span><span>).</span><span class="identifier">map</span><span>(</span><span class="identifier">mq</span><span> =&gt; </span><span class="identifier">mq</span><span>.</span><span class="identifier">mapLastTerm</span><span>(</span><span class="identifier">expandQ</span><span>))
+</span><span class="comment">// res2: Either[String, pink.cozydev.lucille.MultiQuery] = Right(
 //   value = MultiQuery(
 //     qs = NonEmptyList(
 //       head = And(
