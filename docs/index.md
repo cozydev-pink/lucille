@@ -18,7 +18,7 @@ libraryDependencies += "pink.cozydev" %%% "lucille" % "@VERSION@"
 
 ### Parsing
 
-Lucille offers a `parseQ` function to parse all of a string into a Lucille `MultiQuery` structure:
+Lucille offers a `parse` function to parse a whole string into a Lucille `MultiQuery` structure:
 
 ```scala mdoc
 import pink.cozydev.lucille.QueryParser
