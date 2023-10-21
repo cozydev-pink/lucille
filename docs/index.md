@@ -1,5 +1,8 @@
 ## lucille
 
+Lucille is a small library for parsing and representing queries using the [Lucene query syntax](https://lucene.apache.org/core/9_8_0/queryparser/org/apache/lucene/queryparser/flexible/standard/StandardQueryParser.html).
+
+
 ### Usage
 
 This library is currently available for Scala binary versions 2.12, 2.13, and 3.2.
@@ -18,7 +21,7 @@ libraryDependencies += "pink.cozydev" %%% "lucille" % "@VERSION@"
 
 ### Parsing
 
-Lucille offers a `parseQ` function to parse all of a string into a Lucille `MultiQuery` structure:
+Lucille offers a `parse` function to parse a whole string into a Lucille `MultiQuery` structure:
 
 ```scala mdoc
 import pink.cozydev.lucille.QueryParser
