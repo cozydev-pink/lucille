@@ -5,7 +5,7 @@ Lucille is a small library for parsing and representing queries using the [Lucen
 
 ### Usage
 
-This library is currently available for Scala binary versions 2.12, 2.13, and 3.2.
+This library is currently available for Scala binary versions 2.12, 2.13, and 3.
 
 Additionally, it's available for the JVM, Scala.js, and Scala Native.
 
