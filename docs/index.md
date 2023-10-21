@@ -21,9 +21,9 @@ libraryDependencies += "pink.cozydev" %%% "lucille" % "@VERSION@"
 Lucille offers a `parseQ` function to parse all of a string into a Lucille `MultiQuery` structure:
 
 ```scala mdoc
-import pink.cozydev.lucille.Parser
+import pink.cozydev.lucille.QueryParser
 
-Parser.parseQ("cats OR dogs")
+QueryParser.parse("cats OR dogs")
 ```
 
 ### Last Query Rewriting
@@ -48,11 +48,11 @@ We can now use `expandQ` along with `mapLastTerm` to rewrite the last term of a 
 expanded term + prefix:
 
 ```scala mdoc
-Parser.parseQ("cats meo").map(mq => mq.mapLastTerm(expandQ))
+QueryParser.parse("cats meo").map(mq => mq.mapLastTerm(expandQ))
 ```
 
 This also works when the last term is part of a boolean or field query.
 
 ```scala mdoc
-Parser.parseQ("cats AND do").map(mq => mq.mapLastTerm(expandQ))
+QueryParser.parse("cats AND do").map(mq => mq.mapLastTerm(expandQ))
 ```
