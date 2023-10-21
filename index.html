@@ -97,19 +97,20 @@
       <main class="content">
 
         <h1 id="lucille" class="title">lucille</h1>
+        <p>Lucille is a small library for parsing and representing queries using the <a href="https://lucene.apache.org/core/9_8_0/queryparser/org/apache/lucene/queryparser/flexible/standard/StandardQueryParser.html">Lucene query syntax</a>.</p>
         
         <h3 id="usage" class="section"><a class="anchor-link left" href="#usage"><i class="icofont-laika link">&#xef71;</i></a>Usage</h3>
         <p>This library is currently available for Scala binary versions 2.12, 2.13, and 3.2.</p>
         <p>Additionally, it&#39;s available for the JVM, Scala.js, and Scala Native.</p>
         <p>To use the latest version, include the following in your <code>build.sbt</code>:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="comment">// use this snippet for the JVM
-</span><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;pink.cozydev&quot;</span><span> %% </span><span class="string-literal">&quot;lucille&quot;</span><span> % </span><span class="string-literal">&quot;0.0-81076f3-SNAPSHOT&quot;</span><span>
+</span><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;pink.cozydev&quot;</span><span> %% </span><span class="string-literal">&quot;lucille&quot;</span><span> % </span><span class="string-literal">&quot;0.0-5a66157-SNAPSHOT&quot;</span><span>
 
 </span><span class="comment">// use this snippet for JS, Native, or cross-building
-</span><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;pink.cozydev&quot;</span><span> %%% </span><span class="string-literal">&quot;lucille&quot;</span><span> % </span><span class="string-literal">&quot;0.0-81076f3-SNAPSHOT&quot;</span></code></pre>
+</span><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;pink.cozydev&quot;</span><span> %%% </span><span class="string-literal">&quot;lucille&quot;</span><span> % </span><span class="string-literal">&quot;0.0-5a66157-SNAPSHOT&quot;</span></code></pre>
         
         <h3 id="parsing" class="section"><a class="anchor-link left" href="#parsing"><i class="icofont-laika link">&#xef71;</i></a>Parsing</h3>
-        <p>Lucille offers a <code>parseQ</code> function to parse all of a string into a Lucille <code>MultiQuery</code> structure:</p>
+        <p>Lucille offers a <code>parse</code> function to parse a whole string into a Lucille <code>MultiQuery</code> structure:</p>
         <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">pink</span><span>.</span><span class="identifier">cozydev</span><span>.</span><span class="identifier">lucille</span><span>.</span><span class="type-name">QueryParser</span><span>
 
 </span><span class="type-name">QueryParser</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats OR dogs&quot;</span><span>)
