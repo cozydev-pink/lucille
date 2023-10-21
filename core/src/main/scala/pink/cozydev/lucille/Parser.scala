@@ -23,7 +23,23 @@ import cats.data.NonEmptyList
 import cats.parse.Parser0
 import cats.syntax.all._
 
-object Parser {
+object QueryParser {
+
+  private def errorMsg(err: cats.parse.Parser.Error): String = {
+    val exps = err.expected.map(_.show).mkString_("\n")
+    s"Parse error at offset ${err.failedAtOffset}, with expectations:\n $exps"
+  }
+
+  /** Attempt to parse a whole string representing a Lucene query */
+  def parse(input: String): Either[String, MultiQuery] =
+    Parser.fullQuery
+      .parseAll(input)
+      .map(MultiQuery.apply)
+      .leftMap(errorMsg)
+
+}
+
+private object Parser {
   import Query._
 
   val dquote = P.charIn(Set('"', '“', '”'))
