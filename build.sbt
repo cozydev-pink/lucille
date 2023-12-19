@@ -43,6 +43,14 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     ),
   )
 
+lazy val benchmarks = project
+  .in(file("benchmarks"))
+  .dependsOn(core.jvm)
+  .settings(
+    name := "lucille-benchmarks"
+  )
+  .enablePlugins(NoPublishPlugin, JmhPlugin)
+
 import laika.ast.Path.Root
 import laika.helium.config.{IconLink, HeliumIcon, TextLink, ThemeNavigationSection}
 lazy val docs = project
