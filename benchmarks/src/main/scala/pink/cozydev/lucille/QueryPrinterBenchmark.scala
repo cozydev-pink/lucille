@@ -6,7 +6,7 @@ import org.openjdk.jmh.annotations._
 
 import pink.cozydev.lucille.Query
 import pink.cozydev.lucille.QueryPrinter
-import pink.cozydev.lucille.QueryParser
+import cats.data.NonEmptyList
 
 /** To run the benchmark from within sbt:
   *
@@ -16,26 +16,41 @@ import pink.cozydev.lucille.QueryParser
   * benchmarks should be usually executed at least in 10 iterations (as a rule of thumb), but
   * more is better.
   */
-@State(Scope.Thread)
-@BenchmarkMode(Array(Mode.Throughput))
-@OutputTimeUnit(TimeUnit.SECONDS)
+@State(Scope.Benchmark)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 class QueryPrinterBenchmark {
+  import Query._
 
-  var queries: List[Query] = _
+  @Param(Array("10", "100", "1000"))
+  var size: Int = 0
+
+  var orQueries: Query = _
+  var queries: Vector[Query] = Vector.empty
+
   @Setup
   def setup(): Unit = {
-    val qs = List(
-      "hi hello this is a large multi term query with several different words",
-      "one AND two AND three OR four OR five AND six OR seven AND eight OR nine AND ten",
-      "(multiple terms)@2 OR title:\"The Title\" AND age:[10 TO 30}",
-      "something AND ((multiple terms)@2 OR title:\"The Title\" AND age:[10 TO 30}) OR fuzzy~2",
+    orQueries = Or(NonEmptyList(Term("o"), (1 to size).map(i => Term(i.toString)).toList))
+    queries = Vector(
+      Term("term"),
+      Phrase("phrase query"),
+      Prefix("prefi"),
+      Proximity("proximity query", 2),
+      Fuzzy("fuzzy", None),
+      Fuzzy("fuzzy", Some(2)),
+      TermRegex("/.ump(s|ing)/"),
+      TermRange(None, None, false, false),
+      TermRange(Some("apple"), None, true, false),
+      TermRange(None, Some("banana"), false, true),
+      TermRange(Some("apple"), Some("banana"), true, true),
     )
-    queries = qs.map(QueryParser.parse).map(_.toOption.get)
   }
 
+  @Benchmark
+  def orQueriesPrint(): String =
+    QueryPrinter.print(orQueries)
 
   @Benchmark
-  def printer(): List[String] =
+  def termQueriesPrint(): Vector[String] =
     queries.map(QueryPrinter.print)
 
 }
