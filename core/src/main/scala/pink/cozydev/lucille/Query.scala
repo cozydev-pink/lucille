@@ -84,7 +84,7 @@ object Query {
 
   /** A proximity query
     * Search for words within a specified word distance
-    * e.g. '"cat jumped"~3', '"one two three"~2'
+    * e.g. '"cat jumped"\~3', '"one two three"\~2'
     *
     * @param str the words
     * @param num the word distance
@@ -92,7 +92,7 @@ object Query {
   final case class Proximity(str: String, num: Int) extends TermQuery
 
   /** A fuzzy query with an optional distance value
-    * e.g. 'cat~', 'cat~1'
+    * e.g. 'cat\~', 'cat\~1'
     *
     * @param str the string
     * @param num the number of edits allowed
