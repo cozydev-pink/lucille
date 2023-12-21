@@ -45,18 +45,6 @@ class QueryPrinterBenchmark {
   }
 
   @Benchmark
-  def orQueries10PrintToString(): String =
-    orQueries10.toString()
-
-  @Benchmark
-  def orQueries1000PrintToString(): String =
-    orQueries1000.toString()
-
-  @Benchmark
-  def termQueriesPrintToString(): Vector[String] =
-    queries.map(_.toString())
-
-  @Benchmark
   def orQueries10Print(): String =
     QueryPrinter.print(orQueries10)
 
