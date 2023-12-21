@@ -71,7 +71,7 @@ private object Parser {
   val proxSoft: P[String] = phrase.soft <* pchar('~')
 
   /** Parse a proximity query
-    * e.g. '"cat jumped"~3', '"one two three"~2'
+    * e.g. '"cat jumped"\~3', '"one two three"\~2'
     */
   val proximityQ: P[Proximity] = (proxSoft ~ int).map { case (p, n) =>
     Proximity(p, n)
@@ -80,7 +80,7 @@ private object Parser {
   val fuzzySoft: P[String] = term.soft <* pchar('~')
 
   /** Parse a fuzzy term query
-    * e.g. 'cat~', 'cat~1'
+    * e.g. 'cat\~', 'cat\~1'
     */
   val fuzzyT: P[Fuzzy] = (fuzzySoft ~ int.?).map { case (q, n) =>
     Fuzzy(q, n)
