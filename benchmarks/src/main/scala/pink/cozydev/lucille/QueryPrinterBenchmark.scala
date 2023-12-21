@@ -21,15 +21,14 @@ import cats.data.NonEmptyList
 class QueryPrinterBenchmark {
   import Query._
 
-  @Param(Array("10", "100", "1000"))
-  var size: Int = 0
-
-  var orQueries: Query = _
+  var orQueries10: Query = _
+  var orQueries1000: Query = _
   var queries: Vector[Query] = Vector.empty
 
   @Setup
   def setup(): Unit = {
-    orQueries = Or(NonEmptyList(Term("o"), (1 to size).map(i => Term(i.toString)).toList))
+    orQueries10 = Or(NonEmptyList(Term("o"), (1 to 10).map(i => Term(i.toString)).toList))
+    orQueries1000 = Or(NonEmptyList(Term("o"), (1 to 1000).map(i => Term(i.toString)).toList))
     queries = Vector(
       Term("term"),
       Phrase("phrase query"),
@@ -46,16 +45,24 @@ class QueryPrinterBenchmark {
   }
 
   @Benchmark
-  def orQueriesPrintToString(): String =
-    orQueries.toString()
+  def orQueries10PrintToString(): String =
+    orQueries10.toString()
+
+  @Benchmark
+  def orQueries1000PrintToString(): String =
+    orQueries1000.toString()
 
   @Benchmark
   def termQueriesPrintToString(): Vector[String] =
     queries.map(_.toString())
 
   @Benchmark
-  def orQueriesPrint(): String =
-    QueryPrinter.print(orQueries)
+  def orQueries10Print(): String =
+    QueryPrinter.print(orQueries10)
+
+  @Benchmark
+  def orQueries1000Print(): String =
+    QueryPrinter.print(orQueries1000)
 
   @Benchmark
   def termQueriesPrint(): Vector[String] =
