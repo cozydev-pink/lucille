@@ -46,6 +46,11 @@ private object Parser {
   val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
   val maybeSpace: Parser0[Unit] = spaces.?.void
   val int: P[Int] = (digit.rep <* P.not(P.char('.'))).string.map(_.toInt)
+  val float: P[Float] = {
+    val dotDigits = P.char('.') *> digit.rep
+    val fs = (digit.rep ~ dotDigits.?).string
+    fs.mapFilter(_.toFloatOption).withContext("float")
+  }
 
   private val baseRange = (0x20.toChar to 0x10ffff.toChar).toSet
   private val special = Set('\\', ':', '^', '(', ')', '"', '“', '”', ' ', '*', '~')
@@ -140,7 +145,6 @@ private object Parser {
     * e.g. 'cats^2', '(dogs)^3.1', 'field:term^2.5'
     */
   def boostQ(query: P[Query]): P[Boost] = {
-    val float: P[Float] = int.map(_.toFloat).withContext("boost num")
     val limitedQ = fieldQuery(query) | termQ | phraseQ | groupQ(query)
     (limitedQ.withContext("limitedQ").soft ~ (P.char('^') *> float)).map(qf => Boost(qf._1, qf._2))
   }

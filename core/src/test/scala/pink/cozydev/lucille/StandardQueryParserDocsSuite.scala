@@ -204,14 +204,27 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     )
   }
 
-  test("jones^2 OR smith^0.5".fail) {
+  test("jones^2 OR smith^0.5") {
     val r = parseQ("jones^2 OR smith^0.5")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(MultiQuery(Or(Boost(Term("jones"), 2f), Boost(Term("smith"), 0.5f)))),
+    )
   }
 
-  test("field:(a OR b NOT c)^2.5 OR field:d".fail) {
+  test("field:(a OR b NOT c)^2.5 OR field:d") {
     val r = parseQ("field:(a OR b NOT c)^2.5 OR field:d")
-    assert(r.isRight)
+    assertEquals(
+      r,
+      Right(
+        MultiQuery(
+          Or(
+            Field("field", Boost(Group(Or(Term("a"), Term("b")), Not(Term("c"))), 2.5f)),
+            Field("field", Term("d")),
+          )
+        )
+      ),
+    )
   }
 
   test("""\:\(quoted\+term\)\:""".fail) {
