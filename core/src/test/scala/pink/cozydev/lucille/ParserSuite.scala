@@ -112,6 +112,17 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
     assertSingleTerm(r, Field("fieldName42", Boost(Term("cat42"), 3.1f)))
   }
 
+  test("parse boost does not parse with trailing 'f' on boost".fail) {
+    // TODO the trailing `f` is parsing as another term and it should not
+    val r = parseQ("fieldName42:cat42^3.1f")
+    assert(r.isLeft)
+  }
+
+  test("parse boost does not parse with trailing 'd' on boost".fail) {
+    val r = parseQ("fieldName42:cat42^3.1d")
+    assert(r.isLeft)
+  }
+
 }
 
 class MultiSimpleQuerySuite extends munit.FunSuite {
