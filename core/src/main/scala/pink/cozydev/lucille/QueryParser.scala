@@ -136,6 +136,15 @@ private object Parser {
   def notQ(query: P[Query]): P[Query] =
     ((P.string("NOT").soft ~ maybeSpace) *> query).map(Not.apply)
 
+  /**  Parse a boost query
+    * e.g. 'cats^2', '(dogs)^3.1', 'field:term^2.5'
+    */
+  def boostQ(query: P[Query]): P[Boost] = {
+    val float: P[Float] = int.map(_.toFloat).withContext("boost num")
+    val limitedQ = fieldQuery(query) | termQ | phraseQ | groupQ(query)
+    (limitedQ.withContext("limitedQ").soft ~ (P.char('^') *> float)).map(qf => Boost(qf._1, qf._2))
+  }
+
   /**  Parse a minimum match query
     * e.g. '(one two three)@2'
     */
@@ -205,10 +214,11 @@ private object Parser {
         rangeQuery,
         fuzzyT,
         prefixT,
+        minimumMatchQ(r),
+        boostQ(r),
         termQ,
         regexQ,
         phraseQ,
-        minimumMatchQ(r),
         groupQ(r),
       )
     )

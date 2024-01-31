@@ -47,6 +47,10 @@ object QueryPrinter {
           sb.append('(')
           printEachNel(q.qs, " ")
           sb.append(s")@${q.num}")
+        case q: Boost =>
+          sb.append('(')
+          printQ(q.q)
+          sb.append(s")^${q.boost}")
         case q: Field =>
           sb.append(q.field)
           sb.append(':')
