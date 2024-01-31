@@ -46,10 +46,17 @@ private object Parser {
   val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
   val maybeSpace: Parser0[Unit] = spaces.?.void
   val int: P[Int] = (digit.rep <* P.not(P.char('.'))).string.map(_.toInt)
+
+  def parseFloat(s: String): Option[Float] =
+    try Option(java.lang.Float.parseFloat(s))
+    catch {
+      case _: NumberFormatException => None
+    }
+
   val float: P[Float] = {
     val dotDigits = P.char('.') *> digit.rep
     val fs = (digit.rep ~ dotDigits.?).string
-    fs.mapFilter(_.toFloatOption).withContext("float")
+    fs.mapFilter(parseFloat).withContext("float")
   }
 
   private val baseRange = (0x20.toChar to 0x10ffff.toChar).toSet
