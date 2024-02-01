@@ -70,9 +70,27 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
   }
 
   test("prints Boost query") {
+    val q = Boost(Or(NonEmptyList.of(Term("hello"), Term("hi"))), 2.25f)
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "(hello OR hi)^2.25")
+  }
+
+  test("prints Boost query with precision") {
     val q = Boost(Or(NonEmptyList.of(Term("hello"), Term("hi"))), 3.1f)
     val str = QueryPrinter.print(q, 1)
     assertEquals(str, "(hello OR hi)^3.1")
+  }
+
+  test("prints Boost query with other queries included") {
+    val q = Or(
+      Boost(
+        Or(Field("fieldA", Group(NonEmptyList.of(Or(Term("a"), Term("b")), Not(Term("c")))))),
+        2.50f,
+      ),
+      Field("fieldB", Term("d")),
+    )
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "(fieldA:(a OR b NOT c))^2.50 OR fieldB:d")
   }
 
   test("prints Field query") {
