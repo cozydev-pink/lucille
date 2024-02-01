@@ -71,7 +71,7 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
 
   test("prints Boost query") {
     val q = Boost(Or(NonEmptyList.of(Term("hello"), Term("hi"))), 3.1f)
-    val str = QueryPrinter.print(q)
+    val str = QueryPrinter.print(q, 1)
     assertEquals(str, "(hello OR hi)^3.1")
   }
 

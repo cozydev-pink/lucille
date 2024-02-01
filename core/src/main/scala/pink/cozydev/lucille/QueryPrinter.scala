@@ -21,7 +21,7 @@ import cats.data.NonEmptyList
 
 object QueryPrinter {
 
-  def print(query: Query): String = {
+  def print(query: Query, precision: Int = 2): String = {
     val sb = new StringBuilder()
 
     def printQ(query: Query): Unit =
@@ -50,7 +50,7 @@ object QueryPrinter {
         case q: Boost =>
           sb.append('(')
           printQ(q.q)
-          sb.append(s")^${q.boost}")
+          sb.append(s")^%.${precision}f".format(q.boost))
         case q: Field =>
           sb.append(q.field)
           sb.append(':')
