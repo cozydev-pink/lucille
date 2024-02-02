@@ -69,16 +69,46 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
     assertEquals(str, "(hello hi)@2")
   }
 
+  test("prints single term with boost") {
+    val q = Boost(Term("hello"), 2.25f)
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "hello^2.25")
+  }
+
+  test("prints phrase query with boost") {
+    val q = Boost(Phrase("hello friend"), 2.25f)
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "\"hello friend\"^2.25")
+  }
+
   test("prints Boost query") {
     val q = Boost(Or(NonEmptyList.of(Term("hello"), Term("hi"))), 2.25f)
     val str = QueryPrinter.print(q)
     assertEquals(str, "(hello OR hi)^2.25")
   }
 
+  test("prints query with multiple boosts") {
+    val q = And(Boost(Term("cats"), 3f), Boost(Term("dogs"), 2f))
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "cats^3.00 AND dogs^2.00")
+  }
+
+  test("prints Boost query with precision zero") {
+    val q = Boost(Or(NonEmptyList.of(Term("hello"), Term("hi"))), 3.1f)
+    val str = QueryPrinter.print(q, 0)
+    assertEquals(str, "(hello OR hi)^3")
+  }
+
   test("prints Boost query with precision") {
     val q = Boost(Or(NonEmptyList.of(Term("hello"), Term("hi"))), 3.1f)
     val str = QueryPrinter.print(q, 1)
     assertEquals(str, "(hello OR hi)^3.1")
+  }
+
+  test("prints Boost query with group") {
+    val q = Boost(Group(Term("hello"), Field("fieldB", Term("d"))), 3.1f)
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "(hello fieldB:d)^3.10")
   }
 
   test("prints Boost query with other queries included") {

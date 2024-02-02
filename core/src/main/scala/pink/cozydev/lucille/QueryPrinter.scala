@@ -48,14 +48,27 @@ object QueryPrinter {
           printEachNel(q.qs, " ")
           sb.append(s")@${q.num}")
         case q: Boost =>
-          sb.append('(')
-          printQ(q.q)
-          sb.append(s")^%.${precision}f".format(q.boost))
+          printBoostQuery(q)
         case q: Field =>
           sb.append(q.field)
           sb.append(':')
           printQ(q.q)
       }
+
+    def printBoostQuery(q: Boost): Unit = {
+      val boostStr = s"%.${precision}f".format(q.boost)
+      q.q match {
+        case q: Group => printQ(q)
+        case q: Phrase => strTermQuery(q)
+        case q: Term => strTermQuery(q)
+        case qq =>
+          sb.append('(')
+          printQ(qq)
+          sb.append(')')
+      }
+      sb.append('^')
+      sb.append(boostStr)
+    }
 
     def strTermQuery(q: TermQuery): Unit =
       q match {

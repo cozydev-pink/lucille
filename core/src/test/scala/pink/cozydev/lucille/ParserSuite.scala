@@ -102,6 +102,16 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
     assert(r.isLeft)
   }
 
+  test("parse boost on term query") {
+    val r = parseQ("cats^3.0")
+    assertSingleTerm(r, Boost(Term("cats"), 3f))
+  }
+
+  test("parse multiple boost on term queries") {
+    val r = parseQ("cats^3.0 AND dogs^2")
+    assertSingleTerm(r, And(Boost(Term("cats"), 3f), Boost(Term("dogs"), 2f)))
+  }
+
   test("parse boost on field query") {
     val r = parseQ("fieldName42:cat42^3")
     assertSingleTerm(r, Field("fieldName42", Boost(Term("cat42"), 3f)))
@@ -110,6 +120,11 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
   test("parse boost on field query using boost with decimal point") {
     val r = parseQ("fieldName42:cat42^3.1")
     assertSingleTerm(r, Field("fieldName42", Boost(Term("cat42"), 3.1f)))
+  }
+
+  test("parse boost on field query with group query") {
+    val r = parseQ("fieldName42:(cats AND dogs)^20")
+    assertSingleTerm(r, Field("fieldName42", Boost(Group(And(Term("cats"), Term("dogs"))), 20f)))
   }
 
   test("parse boost does not parse with trailing 'f' on boost".fail) {
