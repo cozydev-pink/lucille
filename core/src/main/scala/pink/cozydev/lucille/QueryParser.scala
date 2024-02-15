@@ -17,7 +17,7 @@
 package pink.cozydev.lucille
 
 import cats.parse.{Parser => P}
-import cats.parse.Rfc5234.{sp, alpha, digit}
+import cats.parse.Rfc5234.{sp, alpha, digit, wsp}
 import cats.parse.Parser.{char => pchar}
 import cats.data.NonEmptyList
 import cats.parse.Parser0
@@ -43,7 +43,7 @@ private object Parser {
   import Query._
 
   val dquote = P.charIn(Set('"', '“', '”'))
-  val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
+  val spaces: P[Unit] = wsp.rep.void
   val maybeSpace: Parser0[Unit] = spaces.?.void
   val int: P[Int] = (digit.rep <* P.not(P.char('.'))).string.map(_.toInt)
 
