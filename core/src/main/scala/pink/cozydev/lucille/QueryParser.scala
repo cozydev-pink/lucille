@@ -66,6 +66,8 @@ private object Parser {
     P.charIn(baseRange -- special)
   val reserved = Set("OR", "||", "AND", "&&", "NOT", "+", "-", "/")
 
+  val queryEnd = (wsp | P.end | P.char(')')).peek
+
   val term: P[String] = P.not(P.stringIn(reserved)).with1 *> allowed.rep.string
 
   /** Parse a term query
@@ -153,16 +155,16 @@ private object Parser {
     */
   def boostQ(query: P[Query]): P[Boost] = {
     val limitedQ = fieldQuery(query) | termQ | phraseQ | groupQ(query)
-    (limitedQ.withContext("limitedQ").soft ~ (P.char('^') *> float <* wsp.orElse(
-      P.end | P.char(')').peek
-    ))).map(qf => Boost(qf._1, qf._2))
+    (limitedQ.withContext("limitedQ").soft ~ (P.char('^') *> float <* queryEnd)).map(qf =>
+      Boost(qf._1, qf._2)
+    )
   }
 
   /**  Parse a minimum match query
     * e.g. '(one two three)@2'
     */
   def minimumMatchQ(query: P[Query]): P[MinimumMatch] = {
-    val matchNum = P.char('@') *> int <* wsp.orElse(P.end | P.char(')').peek)
+    val matchNum = P.char('@') *> int <* queryEnd
     val grouped = nonGrouped(query).between(P.char('('), P.char(')'))
     (grouped.soft ~ matchNum).map { case (qs, n) => MinimumMatch(qs, n) }
   }
