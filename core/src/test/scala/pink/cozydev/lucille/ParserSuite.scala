@@ -117,6 +117,11 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
     assertSingleTerm(r, Field("fieldName42", Boost(Term("cat42"), 3f)))
   }
 
+  test("parse boost on field query in a group query") {
+    val r = parseQ("(fieldName42:cat42^3)")
+    assertSingleTerm(r, Group(Field("fieldName42", Boost(Term("cat42"), 3f))))
+  }
+
   test("parse boost on field query using boost with decimal point") {
     val r = parseQ("fieldName42:cat42^3.1")
     assertSingleTerm(r, Field("fieldName42", Boost(Term("cat42"), 3.1f)))
