@@ -21,6 +21,18 @@ import cats.data.NonEmptyList
 
 object QueryPrinter {
 
+  /** Builds a string representation of a `Query`.
+    * `Boost` query values are rounded to `precision`.
+    *
+    * @example {{{
+    * scala> QueryPrinter.print(Boost(Phrase("apple pi"), 3.14159f), 3)
+    * res0: String = "apple pi"^3.142
+    * }}}
+    *
+    * @param query query to format
+    * @param precision restricts the number of characters after the decimal
+    * @return
+    */
   def print(query: Query, precision: Int = 2): String = {
     val sb = new StringBuilder()
 
