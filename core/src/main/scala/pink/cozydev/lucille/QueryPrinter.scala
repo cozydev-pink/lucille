@@ -21,7 +21,19 @@ import cats.data.NonEmptyList
 
 object QueryPrinter {
 
-  def print(query: Query): String = {
+  /** Builds a string representation of a `Query`.
+    * `Boost` query values are rounded to `precision`.
+    *
+    * @example {{{
+    * scala> QueryPrinter.print(Boost(Phrase("apple pi"), 3.14159f), 3)
+    * res0: String = "apple pi"^3.142
+    * }}}
+    *
+    * @param query query to format
+    * @param precision restricts the number of characters after the decimal
+    * @return
+    */
+  def print(query: Query, precision: Int = 2): String = {
     val sb = new StringBuilder()
 
     def printQ(query: Query): Unit =
@@ -47,11 +59,28 @@ object QueryPrinter {
           sb.append('(')
           printEachNel(q.qs, " ")
           sb.append(s")@${q.num}")
+        case q: Boost =>
+          printBoostQuery(q)
         case q: Field =>
           sb.append(q.field)
           sb.append(':')
           printQ(q.q)
       }
+
+    def printBoostQuery(q: Boost): Unit = {
+      val boostStr = s"%.${precision}f".format(q.boost)
+      q.q match {
+        case q: Group => printQ(q)
+        case q: Phrase => strTermQuery(q)
+        case q: Term => strTermQuery(q)
+        case qq =>
+          sb.append('(')
+          printQ(qq)
+          sb.append(')')
+      }
+      sb.append('^')
+      sb.append(boostStr)
+    }
 
     def strTermQuery(q: TermQuery): Unit =
       q match {

@@ -200,6 +200,17 @@ object Query {
       UnaryMinus(q.mapLastTerm(f))
   }
 
+  /** A query with a boost weight
+    * Search for documents with the underlying query as usual, the boost is only used in scoring
+    * e.g. 'cats^2 OR dogs^3.1'
+    *
+    * @param q the query
+    * @param boost the boost weight
+    */
+  final case class Boost(q: Query, boost: Float) extends Query {
+    def mapLastTerm(f: Query.Term => Query): Boost = this
+  }
+
   /** A minimum match query
     * Search for documents that match at least `num` of the given queries
     * e.g. '(one two three)@2'

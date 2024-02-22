@@ -47,6 +47,18 @@ private object Parser {
   val maybeSpace: Parser0[Unit] = spaces.?.void
   val int: P[Int] = (digit.rep <* P.not(P.char('.'))).string.map(_.toInt)
 
+  def parseFloat(s: String): Option[Float] =
+    try Option(java.lang.Float.parseFloat(s))
+    catch {
+      case _: NumberFormatException => None
+    }
+
+  val float: P[Float] = {
+    val dotDigits = P.char('.') *> digit.rep
+    val fs = (digit.rep ~ dotDigits.?).string
+    fs.mapFilter(parseFloat).withContext("float")
+  }
+
   private val baseRange = (0x20.toChar to 0x10ffff.toChar).toSet
   private val special = Set('\\', ':', '^', '(', ')', '"', '“', '”', ' ', '*', '~')
   private val allowed: P[Char] =
@@ -136,6 +148,14 @@ private object Parser {
   def notQ(query: P[Query]): P[Query] =
     ((P.string("NOT").soft ~ maybeSpace) *> query).map(Not.apply)
 
+  /**  Parse a boost query
+    * e.g. 'cats^2', '(dogs)^3.1', 'field:term^2.5'
+    */
+  def boostQ(query: P[Query]): P[Boost] = {
+    val limitedQ = fieldQuery(query) | termQ | phraseQ | groupQ(query)
+    (limitedQ.withContext("limitedQ").soft ~ (P.char('^') *> float)).map(qf => Boost(qf._1, qf._2))
+  }
+
   /**  Parse a minimum match query
     * e.g. '(one two three)@2'
     */
@@ -205,10 +225,11 @@ private object Parser {
         rangeQuery,
         fuzzyT,
         prefixT,
+        minimumMatchQ(r),
+        boostQ(r),
         termQ,
         regexQ,
         phraseQ,
-        minimumMatchQ(r),
         groupQ(r),
       )
     )
