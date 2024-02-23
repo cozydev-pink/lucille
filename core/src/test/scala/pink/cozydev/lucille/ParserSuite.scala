@@ -133,7 +133,6 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
   }
 
   test("parse boost does not parse with trailing 'f' on boost") {
-    // TODO the trailing `f` is parsing as another term and it should not
     val r = parseQ("fieldName42:cat42^3.1f")
     assert(r.isLeft)
   }
