@@ -17,7 +17,7 @@
 package pink.cozydev.lucille
 
 import cats.parse.{Parser => P}
-import cats.parse.Rfc5234.{sp, alpha, digit}
+import cats.parse.Rfc5234.{sp, alpha, digit, wsp}
 import cats.parse.Parser.{char => pchar}
 import cats.data.NonEmptyList
 import cats.parse.Parser0
@@ -43,7 +43,7 @@ private object Parser {
   import Query._
 
   val dquote = P.charIn(Set('"', '“', '”'))
-  val spaces: P[Unit] = P.charIn(Set(' ', '\t')).rep.void
+  val spaces: P[Unit] = wsp.rep.void
   val maybeSpace: Parser0[Unit] = spaces.?.void
   val int: P[Int] = (digit.rep <* P.not(P.char('.'))).string.map(_.toInt)
 
@@ -65,6 +65,8 @@ private object Parser {
     // From cats.parse.strings.Json nonEscaped handling
     P.charIn(baseRange -- special)
   val reserved = Set("OR", "||", "AND", "&&", "NOT", "+", "-", "/")
+
+  val queryEnd = (wsp | P.end | P.char(')')).peek
 
   val term: P[String] = P.not(P.stringIn(reserved)).with1 *> allowed.rep.string
 
@@ -153,14 +155,16 @@ private object Parser {
     */
   def boostQ(query: P[Query]): P[Boost] = {
     val limitedQ = fieldQuery(query) | termQ | phraseQ | groupQ(query)
-    (limitedQ.withContext("limitedQ").soft ~ (P.char('^') *> float)).map(qf => Boost(qf._1, qf._2))
+    (limitedQ.withContext("limitedQ").soft ~ (P.char('^') *> float <* queryEnd)).map(qf =>
+      Boost(qf._1, qf._2)
+    )
   }
 
   /**  Parse a minimum match query
     * e.g. '(one two three)@2'
     */
   def minimumMatchQ(query: P[Query]): P[MinimumMatch] = {
-    val matchNum = P.char('@') *> int
+    val matchNum = P.char('@') *> int <* queryEnd
     val grouped = nonGrouped(query).between(P.char('('), P.char(')'))
     (grouped.soft ~ matchNum).map { case (qs, n) => MinimumMatch(qs, n) }
   }
