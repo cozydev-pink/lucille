@@ -75,7 +75,7 @@ private object Parser {
     */
   val termQ: P[Term] = term.map(Term.apply)
 
-  val phrase: P[String] = (term ~ sp.?).rep.string.surroundedBy(dquote)
+  val phrase: P[String] = (maybeSpace.with1 *> term <* maybeSpace).rep.string.surroundedBy(dquote)
 
   /** Parse a phrase query
     * e.g. 'the cat jumped'
