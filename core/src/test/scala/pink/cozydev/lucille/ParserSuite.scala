@@ -52,6 +52,21 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
     assertSingleTerm(r, Phrase("The cat jumped"))
   }
 
+  test("parse phrase term with inner trailing whitespace") {
+    val r = parseQ("\"The cat jumped   \"")
+    assertSingleTerm(r, Phrase("The cat jumped   "))
+  }
+
+  test("parse phrase term with inner leading whitespace") {
+    val r = parseQ("\"   The cat jumped\"")
+    assertSingleTerm(r, Phrase("   The cat jumped"))
+  }
+
+  test("parse phrase term with inner leading and trailing and mixed whitespace") {
+    val r = parseQ("\"   The  cat jumped   \"")
+    assertSingleTerm(r, Phrase("   The  cat jumped   "))
+  }
+
   test("parse phrase term with smart quotes") {
     val r = parseQ("“The cat jumped”")
     assertSingleTerm(r, Phrase("The cat jumped"))
