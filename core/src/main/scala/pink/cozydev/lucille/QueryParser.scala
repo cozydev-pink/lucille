@@ -22,6 +22,7 @@ import cats.parse.Parser.{char => pchar}
 import cats.data.NonEmptyList
 import cats.parse.Parser0
 import cats.syntax.all._
+import internal.Op
 
 object QueryParser {
 
@@ -118,8 +119,8 @@ private object Parser {
     */
   val regexQ: P[TermRegex] = regex.map(TermRegex.apply)
 
-  val or = (P.string("OR") | P.string("||")).as(Op.OR)
-  val and = (P.string("AND") | P.string("&&")).as(Op.AND)
+  val or = (P.string("OR") | P.string("||")).as(internal.Op.OR)
+  val and = (P.string("AND") | P.string("&&")).as(internal.Op.AND)
   val infixOp = (or | and).withContext("infixOp")
 
   /** Parse a suffix op query
@@ -135,7 +136,7 @@ private object Parser {
     */
   def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
     (query.repSep(sp.rep) ~ suffixOps(query))
-      .map { case (h, t) => Op.associateOps(h, t) }
+      .map { case (h, t) => internal.Op.associateOps(h, t) }
 
   /** Parse a whole list of queries
     * e.g. 'q0 q1 OR q2 q3'
