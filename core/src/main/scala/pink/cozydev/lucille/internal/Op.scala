@@ -19,9 +19,9 @@ package pink.cozydev.lucille.internal
 import cats.data.NonEmptyList
 import pink.cozydev.lucille.Query
 
-sealed trait Op extends Product with Serializable
+private[lucille] sealed trait Op extends Product with Serializable
 
-object Op {
+private[lucille] object Op {
   case object OR extends Op
   case object AND extends Op
 
