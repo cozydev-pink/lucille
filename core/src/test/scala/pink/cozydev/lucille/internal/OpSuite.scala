@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package pink.cozydev.lucille
+package pink.cozydev.lucille.internal
 import cats.data.NonEmptyList
-import Query._
+import pink.cozydev.lucille.Query._
 import Op._
 
 class AssociateOpsSuite extends munit.FunSuite {
