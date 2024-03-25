@@ -20,8 +20,6 @@ package benchmarks
 import java.util.concurrent.TimeUnit
 import org.openjdk.jmh.annotations._
 
-import pink.cozydev.lucille.Query
-import pink.cozydev.lucille.QueryPrinter
 import cats.data.NonEmptyList
 
 /** To run the benchmark from within sbt:
