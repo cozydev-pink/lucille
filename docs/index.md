@@ -29,6 +29,17 @@ import pink.cozydev.lucille.QueryParser
 QueryParser.parse("cats OR dogs")
 ```
 
+### Printing
+
+Lucille offers a `printer` to format `Query`s as Lucene query strings:
+
+```scala mdoc
+import pink.cozydev.lucille.Query
+import pink.cozydev.lucille.QueryPrinter
+
+QueryPrinter.print(Query.And(Query.Term("cats"), Query.Term("dogs")))
+```
+
 ### Last Query Rewriting
 
 To enable a better interactive search experience, it can be helpful to rewrite the last term as a
