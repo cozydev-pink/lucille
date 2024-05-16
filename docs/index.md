@@ -40,6 +40,18 @@ import pink.cozydev.lucille.QueryPrinter
 QueryPrinter.print(Query.And(Query.Term("cats"), Query.Term("dogs")))
 ```
 
+Because the numeric value of a query boost parameter is modelled as a `Float`, the query printer
+has a `precision` parameter it uses to round the boost parameter for pretty printing:
+
+```scala mdoc
+val queryWithBoost = Query.Boost(Query.Phrase("apple pi"), 3.14159265f)
+
+// the default precision is 2
+QueryPrinter.print(queryWithBoost)
+
+QueryPrinter.print(queryWithBoost, precision=5)
+```
+
 ### Last Query Rewriting
 
 To enable a better interactive search experience, it can be helpful to rewrite the last term as a
