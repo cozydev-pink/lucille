@@ -19,6 +19,9 @@ package pink.cozydev.lucille
 import pink.cozydev.lucille.Query._
 
 class QuerySuite extends munit.FunSuite {
+
+  val parseQ = QueryParser.parse
+
   def expandQ(q: Query): Query =
     q match {
       case Query.Term(t) => Query.Or(Query.Term(t), Query.Prefix(t))
@@ -51,19 +54,19 @@ class QuerySuite extends munit.FunSuite {
 
   test("MultiQuery.mapLastTerm does nothing for ending minimum-should-match query") {
     val qs = "(apple banana orange)@2"
-    val mq = Parser.parseQ(qs)
+    val mq = parseQ(qs)
     assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
   }
 
   test("MultiQuery.mapLastTerm does nothing for ending range query") {
     val qs = "name:[cats TO fs2]"
-    val mq = Parser.parseQ(qs)
+    val mq = parseQ(qs)
     assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
   }
 
   test("MultiQuery.mapLastTerm does nothing for ending group query") {
     val qs = "cats AND (dogs OR fish)"
-    val mq = Parser.parseQ(qs)
+    val mq = parseQ(qs)
     assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
   }
 }

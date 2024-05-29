@@ -16,13 +16,13 @@
 
 package pink.cozydev.lucille
 import cats.data.NonEmptyList
-import cats.parse.Parser.Error
 import Query._
-import Parser._
 
 class SingleSimpleQuerySuite extends munit.FunSuite {
 
-  def assertSingleTerm(r: Either[Error, MultiQuery], expected: Query)(implicit
+  val parseQ = QueryParser.parse
+
+  def assertSingleTerm(r: Either[String, MultiQuery], expected: Query)(implicit
       loc: munit.Location
   ) =
     assertEquals(r, Right(MultiQuery(expected)))
@@ -161,6 +161,8 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
 
 class MultiSimpleQuerySuite extends munit.FunSuite {
 
+  val parseQ = QueryParser.parse
+
   test("parse multiple terms completely") {
     val r = parseQ("The cat jumped")
     assertEquals(r, Right(MultiQuery(Term("The"), Term("cat"), Term("jumped"))))
@@ -206,6 +208,8 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
 }
 
 class QueryWithSuffixOpsSuite extends munit.FunSuite {
+
+  val parseQ = QueryParser.parse
 
   test("parse two term OR query completely") {
     val r = parseQ("derp OR lerp")
@@ -389,6 +393,8 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
 }
 
 class GroupQuerySuite extends munit.FunSuite {
+
+  val parseQ = QueryParser.parse
 
   test("parse multiple terms in a group") {
     val r = parseQ("(The cat jumped)")

@@ -243,9 +243,4 @@ private object Parser {
   /** Parse one or more queries implicitly grouped together in a list
     */
   val fullQuery = nonGrouped(recursiveQ) <* maybeSpace
-
-  /** Attempt to parse a whole string representing a Lucene query
-    */
-  def parseQ(s: String): Either[cats.parse.Parser.Error, MultiQuery] =
-    fullQuery.parseAll(s).map(MultiQuery.apply)
 }

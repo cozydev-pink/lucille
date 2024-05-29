@@ -16,13 +16,13 @@
 
 package pink.cozydev.lucille
 import cats.data.NonEmptyList
-import cats.parse.Parser.Error
 import Query._
-import Parser._
 
 class RegexSuite extends munit.FunSuite {
 
-  def assertSingleQ(r: Either[Error, MultiQuery], expected: Query)(implicit
+  val parseQ = QueryParser.parse
+
+  def assertSingleQ(r: Either[String, MultiQuery], expected: Query)(implicit
       loc: munit.Location
   ) =
     assertEquals(r, Right(MultiQuery(NonEmptyList.one(expected))))

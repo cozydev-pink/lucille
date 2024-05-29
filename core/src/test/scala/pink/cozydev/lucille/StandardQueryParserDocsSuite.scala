@@ -17,11 +17,12 @@
 package pink.cozydev.lucille
 import cats.data.NonEmptyList
 import Query._
-import Parser._
 
 // Cases taken from the Lucene StandardQueryParser docs
 // https://lucene.apache.org/core/9_4_1/queryparser/org/apache/lucene/queryparser/flexible/standard/StandardQueryParser.html
 class StandardQueryParserDocsSuite extends munit.FunSuite {
+
+  val parseQ = QueryParser.parse
 
   test("test") {
     val r = parseQ("test")

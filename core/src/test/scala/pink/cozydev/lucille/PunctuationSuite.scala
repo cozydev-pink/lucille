@@ -15,14 +15,14 @@
  */
 
 package pink.cozydev.lucille
-import cats.parse.Parser.Error
 import Query._
-import Parser._
 
 // Similar to the SingleSimpleQuerySuite but with a focus on queries with punctuation
 class PunctuationSuite extends munit.FunSuite {
 
-  def assertSingleQ(r: Either[Error, MultiQuery], expected: Query)(implicit
+  val parseQ = QueryParser.parse
+
+  def assertSingleQ(r: Either[String, MultiQuery], expected: Query)(implicit
       loc: munit.Location
   ) =
     assertEquals(r, Right(MultiQuery(expected)))
