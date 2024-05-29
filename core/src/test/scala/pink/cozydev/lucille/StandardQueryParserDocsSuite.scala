@@ -22,7 +22,7 @@ import Query._
 // https://lucene.apache.org/core/9_4_1/queryparser/org/apache/lucene/queryparser/flexible/standard/StandardQueryParser.html
 class StandardQueryParserDocsSuite extends munit.FunSuite {
 
-  val parseQ = QueryParser.parse
+  val parseQ = QueryParser.parse(_)
 
   test("test") {
     val r = parseQ("test")

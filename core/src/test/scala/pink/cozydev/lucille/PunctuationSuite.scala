@@ -20,7 +20,7 @@ import Query._
 // Similar to the SingleSimpleQuerySuite but with a focus on queries with punctuation
 class PunctuationSuite extends munit.FunSuite {
 
-  val parseQ = QueryParser.parse
+  val parseQ = QueryParser.parse(_)
 
   def assertSingleQ(r: Either[String, MultiQuery], expected: Query)(implicit
       loc: munit.Location

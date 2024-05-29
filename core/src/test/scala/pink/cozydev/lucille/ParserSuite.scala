@@ -20,7 +20,7 @@ import Query._
 
 class SingleSimpleQuerySuite extends munit.FunSuite {
 
-  val parseQ = QueryParser.parse
+  val parseQ = QueryParser.parse(_)
 
   def assertSingleTerm(r: Either[String, MultiQuery], expected: Query)(implicit
       loc: munit.Location
@@ -161,7 +161,7 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
 
 class MultiSimpleQuerySuite extends munit.FunSuite {
 
-  val parseQ = QueryParser.parse
+  val parseQ = QueryParser.parse(_)
 
   test("parse multiple terms completely") {
     val r = parseQ("The cat jumped")
@@ -209,7 +209,7 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
 
 class QueryWithSuffixOpsSuite extends munit.FunSuite {
 
-  val parseQ = QueryParser.parse
+  val parseQ = QueryParser.parse(_)
 
   test("parse two term OR query completely") {
     val r = parseQ("derp OR lerp")
@@ -394,7 +394,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
 
 class GroupQuerySuite extends munit.FunSuite {
 
-  val parseQ = QueryParser.parse
+  val parseQ = QueryParser.parse(_)
 
   test("parse multiple terms in a group") {
     val r = parseQ("(The cat jumped)")

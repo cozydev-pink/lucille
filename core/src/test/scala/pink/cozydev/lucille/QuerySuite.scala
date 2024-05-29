@@ -20,7 +20,7 @@ import pink.cozydev.lucille.Query._
 
 class QuerySuite extends munit.FunSuite {
 
-  val parseQ = QueryParser.parse
+  val parseQ = QueryParser.parse(_)
 
   def expandQ(q: Query): Query =
     q match {

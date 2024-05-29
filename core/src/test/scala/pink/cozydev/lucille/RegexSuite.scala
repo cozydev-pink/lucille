@@ -20,7 +20,7 @@ import Query._
 
 class RegexSuite extends munit.FunSuite {
 
-  val parseQ = QueryParser.parse
+  val parseQ = QueryParser.parse(_)
 
   def assertSingleQ(r: Either[String, MultiQuery], expected: Query)(implicit
       loc: munit.Location
