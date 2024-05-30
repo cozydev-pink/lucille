@@ -24,7 +24,7 @@ class AssociateOpsSuite extends munit.FunSuite {
   test("associates ORs") {
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((OR, Term("dog")))
-    val result = associateOps(leftQs, opQs)
+    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
     val expected = NonEmptyList.of(Term("the"), Or(Term("cat"), Term("dog")))
     assertEquals(result, expected)
   }
@@ -32,7 +32,7 @@ class AssociateOpsSuite extends munit.FunSuite {
   test("associates ANDs") {
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((AND, Term("dog")))
-    val result = associateOps(leftQs, opQs)
+    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
     val expected = NonEmptyList.of(Term("the"), And(Term("cat"), Term("dog")))
     assertEquals(result, expected)
   }
@@ -40,7 +40,7 @@ class AssociateOpsSuite extends munit.FunSuite {
   test("associates multiple ORs") {
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((OR, Term("dog")), (OR, Term("fish")))
-    val result = associateOps(leftQs, opQs)
+    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
     val expected =
       NonEmptyList.of(Term("the"), Or(Term("cat"), Term("dog"), Term("fish")))
     assertEquals(result, expected)
@@ -49,7 +49,7 @@ class AssociateOpsSuite extends munit.FunSuite {
   test("associates multiple ANDs") {
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((AND, Term("dog")), (AND, Term("fish")))
-    val result = associateOps(leftQs, opQs)
+    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
     val expected =
       NonEmptyList.of(
         Term("the"),
@@ -63,7 +63,7 @@ class AssociateOpsSuite extends munit.FunSuite {
     // default:the default:cat +default:ocean +default:fish
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((OR, Term("ocean")), (AND, Term("fish")))
-    val result = associateOps(leftQs, opQs)
+    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
     val expected =
       NonEmptyList.of(
         Term("the"),
@@ -78,7 +78,7 @@ class AssociateOpsSuite extends munit.FunSuite {
     // default:the +default:cat +default:ocean default:fish
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((AND, Term("ocean")), (OR, Term("fish")))
-    val result = associateOps(leftQs, opQs)
+    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
     val expected =
       NonEmptyList.of(
         Term("the"),
@@ -93,7 +93,7 @@ class AssociateOpsSuite extends munit.FunSuite {
     // default:the default:cat default:ocean +default:ocean2 +default:fish
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((OR, Term("ocean")), (OR, Term("ocean2")), (AND, Term("fish")))
-    val result = associateOps(leftQs, opQs)
+    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
     val expected =
       NonEmptyList.of(
         Term("the"),
@@ -109,7 +109,7 @@ class AssociateOpsSuite extends munit.FunSuite {
     // default:the +default:cat +default:ocean +default:ocean2 default:fish
     val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((AND, Term("ocean")), (AND, Term("ocean2")), (OR, Term("fish")))
-    val result = associateOps(leftQs, opQs)
+    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
     val expected =
       NonEmptyList.of(
         Term("the"),

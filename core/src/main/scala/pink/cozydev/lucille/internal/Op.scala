@@ -29,7 +29,11 @@ private[lucille] object Op {
     * @param qs suffixOp and query pairs
     * @return
     */
-  def associateOps(q1: NonEmptyList[Query], opQs: List[(Op, Query)]): NonEmptyList[Query] = {
+  def associateOps(
+      q1: NonEmptyList[Query],
+      opQs: List[(Op, Query)],
+      defaultBooleanOR: Boolean,
+  ): NonEmptyList[Query] = {
     def go(acc: NonEmptyList[Query], op: Op, opQs: List[(Op, Query)]): NonEmptyList[Query] =
       opQs match {
         case Nil =>
