@@ -17,6 +17,7 @@
 package pink.cozydev.lucille
 
 import pink.cozydev.lucille.Query._
+import cats.data.NonEmptyList
 
 class QuerySuite extends munit.FunSuite {
   def expandQ(q: Query): Query =
@@ -65,5 +66,38 @@ class QuerySuite extends munit.FunSuite {
     val qs = "cats AND (dogs OR fish)"
     val mq = Parser.parseQ(qs)
     assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
+  }
+
+  test("Query.and performs logical AND with Query and argument") {
+    val q1 = Term("cats")
+    val q2 = Or(NonEmptyList.of(Term("dogs"), Term("fish")))
+    val expected = And(NonEmptyList.of(q1, q2))
+    assertEquals(q1.and(q2), expected)
+  }
+
+  test("Query.or performs logical OR with Query and argument") {
+    val q1 = Term("dogs")
+    val q2 = Term("cats")
+    val expected = Or(NonEmptyList.of(q1, q2))
+    assertEquals(q1.or(q2), expected)
+  }
+
+  test("Query.not negates Query") {
+    val q1 = Term("cats")
+    val expected = Not(q1)
+    assertEquals(q1.not, expected)
+  }
+
+  test("Query.group groups Query and argument") {
+    val q1 = Term("dogs")
+    val q2 = Term("cats")
+    val expected = Group(NonEmptyList.of(q1, q2))
+    assertEquals(q1.group(q2), expected)
+  }
+
+  test("Query.boost boosts Query with argument") {
+    val q1 = Term("dogs")
+    val expected = Boost(q1, 100)
+    assertEquals(q1.boost(100), expected)
   }
 }
