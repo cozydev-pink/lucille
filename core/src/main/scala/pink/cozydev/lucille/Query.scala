@@ -27,6 +27,16 @@ sealed trait Query extends Product with Serializable {
     * @return
     */
   def mapLastTerm(f: Query.Term => Query): Query
+
+  def and(q: Query): Query = Query.And(this, q)
+
+  def or(q: Query): Query = Query.Or(this, q)
+
+  def not: Query = Query.Not(this)
+
+  def group(q: Query): Query = Query.Group(this, q)
+
+  def boost(b: Float): Query = Query.Boost(this, b)
 }
 
 /** A trait for all leaf node queries (meaning that they do not contain queries) */
