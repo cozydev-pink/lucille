@@ -44,7 +44,7 @@ class RegexSuite extends munit.FunSuite {
 
   test("parse multipe regex in a group") {
     val r = parseQ("(/jump.*/ /.ouse/)")
-    assertSingleQ(r, Group(TermRegex("jump.*"), TermRegex(".ouse")))
+    assertSingleQ(r, Group(Or(TermRegex("jump.*"), TermRegex(".ouse"))))
   }
 
   test("parse regex with escaped slash") {

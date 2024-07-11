@@ -49,10 +49,10 @@ private[lucille] object Op {
             case (AND, OR) =>
               go(NonEmptyList.of(q), nextOp, tailOpP).prepend(Query.And(acc))
             case (OR, AND) =>
-              // TODO we only get away with not wrapping the `allButLast` in an Or
-              //  because `OR` is the default query type. This should be configurable
-              val allButLast = NonEmptyList(acc.head, acc.tail.dropRight(1))
-              allButLast.concatNel(go(NonEmptyList.of(acc.last, q), nextOp, tailOpP))
+              if (defaultBooleanOR) {
+                val allButLast = NonEmptyList(acc.head, acc.tail.dropRight(1))
+                allButLast.concatNel(go(NonEmptyList.of(acc.last, q), nextOp, tailOpP))
+              } else go(NonEmptyList.of(q), nextOp, tailOpP).prepend(Query.And(acc))
           }
       }
 

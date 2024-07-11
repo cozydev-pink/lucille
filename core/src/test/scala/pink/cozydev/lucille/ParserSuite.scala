@@ -165,19 +165,19 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
 
   test("parse multiple terms completely") {
     val r = parseQ("The cat jumped")
-    assertEquals(r, Right(MultiQuery(Term("The"), Term("cat"), Term("jumped"))))
+    assertEquals(r, Right(MultiQuery(Or(Term("The"), Term("cat"), Term("jumped")))))
   }
 
   test("parse multiple terms with lots of spaces completely") {
     val r = parseQ("The cat   jumped   ")
-    assertEquals(r, Right(MultiQuery(Term("The"), Term("cat"), Term("jumped"))))
+    assertEquals(r, Right(MultiQuery(Or(Term("The"), Term("cat"), Term("jumped")))))
   }
 
   test("parse field query and terms completely") {
     val r = parseQ("fieldName:The cat jumped")
     assertEquals(
       r,
-      Right(MultiQuery(Field("fieldName", Term("The")), Term("cat"), Term("jumped"))),
+      Right(MultiQuery(Or(Field("fieldName", Term("The")), Term("cat"), Term("jumped")))),
     )
   }
 
@@ -295,8 +295,11 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         MultiQuery(
-          Term("term"),
-          Or(Term("derp"), Term("lerp")),
+          // TODO unsure if I like this....
+          Or(
+            Term("term"),
+            Or(Term("derp"), Term("lerp")),
+          )
         )
       ),
     )
@@ -308,8 +311,10 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         MultiQuery(
-          Or(Term("derp"), Term("lerp")),
-          Term("slerp"),
+          Or(
+            Or(Term("derp"), Term("lerp")),
+            Term("slerp"),
+          )
         )
       ),
     )
@@ -321,8 +326,10 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         MultiQuery(
-          And(Term("derp"), Term("lerp")),
-          Term("slerp"),
+          Or(
+            And(Term("derp"), Term("lerp")),
+            Term("slerp"),
+          )
         )
       ),
     )
@@ -358,10 +365,12 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
       r,
       Right(
         MultiQuery(
-          And(Term("derp"), Term("lerp")),
-          Term("slerp"),
-          Or(Term("orA"), Term("orB")),
-          Term("last"),
+          Or(
+            And(Term("derp"), Term("lerp")),
+            Term("slerp"),
+            Or(Term("orA"), Term("orB")),
+            Term("last"),
+          )
         )
       ),
     )
@@ -401,7 +410,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Group(Term("The"), Term("cat"), Term("jumped")))
+        MultiQuery(Group(Or(Term("The"), Term("cat"), Term("jumped"))))
       ),
     )
   }
@@ -411,7 +420,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Group(Term("The"), Term("cat"), Term("jumped")))
+        MultiQuery(Group(Or(Term("The"), Term("cat"), Term("jumped"))))
       ),
     )
   }
@@ -422,10 +431,12 @@ class GroupQuerySuite extends munit.FunSuite {
       r,
       Right(
         MultiQuery(
-          Term("animals"),
-          Not(
-            Group(And(Term("cats"), Term("dogs")))
-          ),
+          Or(
+            Term("animals"),
+            Not(
+              Group(And(Term("cats"), Term("dogs")))
+            ),
+          )
         )
       ),
     )
@@ -476,7 +487,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Group(gq), Term("extra"))
+        MultiQuery(Or(Group(gq), Term("extra")))
       ),
     )
   }

@@ -39,7 +39,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Term("test"), Term("equipment"))
+        MultiQuery(Or(Term("test"), Term("equipment")))
       ),
     )
   }
@@ -157,7 +157,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       r,
       Right(
         MultiQuery(
-          Field("title", Group(Term("pass"), Term("fail"), Term("skip")))
+          Field("title", Group(Or(Term("pass"), Term("fail"), Term("skip"))))
         )
       ),
     )
@@ -172,8 +172,10 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
           Field(
             "title",
             Group(
-              UnaryPlus(Term("test")),
-              UnaryPlus(Phrase("result unknown")),
+              Or(
+                UnaryPlus(Term("test")),
+                UnaryPlus(Phrase("result unknown")),
+              )
             ),
           )
         )
@@ -220,7 +222,8 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
       Right(
         MultiQuery(
           Or(
-            Field("field", Boost(Group(Or(Term("a"), Term("b")), Not(Term("c"))), 2.5f)),
+            // TODO I don't like the group or the nested Or's
+            Field("field", Boost(Group(Or(Or(Term("a"), Term("b")), Not(Term("c")))), 2.5f)),
             Field("field", Term("d")),
           )
         )
