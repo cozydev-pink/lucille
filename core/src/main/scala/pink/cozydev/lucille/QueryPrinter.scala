@@ -47,7 +47,7 @@ object QueryPrinter {
           printQ(q.q)
         case q: Group =>
           sb.append('(')
-          printEachNel(q.qs, " ")
+          printQ(q.q)
           sb.append(')')
         case q: UnaryPlus =>
           sb.append('+')

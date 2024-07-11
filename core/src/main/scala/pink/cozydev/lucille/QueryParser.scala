@@ -83,8 +83,7 @@ class QueryParser(
     val g = nonGrouped(query)
       .between(P.char('('), P.char(')'))
     val endOfGroupSpecial = P.char('@')
-    // TODO not NEL
-    (g <* P.not(endOfGroupSpecial)).map(q => Group(NonEmptyList.of(q)))
+    (g <* P.not(endOfGroupSpecial)).map(Group.apply)
   }
 
   /** Parse a suffix op query

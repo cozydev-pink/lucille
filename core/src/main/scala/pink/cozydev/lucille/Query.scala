@@ -170,12 +170,8 @@ object Query {
     *
     * @param qs the queries to group
     */
-  final case class Group(qs: NonEmptyList[Query]) extends Query {
+  final case class Group(q: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): Group = this
-  }
-  object Group {
-    def apply(head: Query, tail: Query*): Group =
-      Group(NonEmptyList(head, tail.toList))
   }
 
   /** A unary plus query
