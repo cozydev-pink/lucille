@@ -162,8 +162,8 @@ object QueryParser {
   val defaultParser = new QueryParser(defaultBooleanOR = true)
 
   /** Attempt to parse a whole string representing a Lucene query */
-  def parse(input: String): Either[String, MultiQuery] =
-    defaultParser.parse(input).map(q => MultiQuery(q))
+  def parse(input: String): Either[String, Query] =
+    defaultParser.parse(input)
 
 }
 

@@ -28,28 +28,28 @@ class QuerySuite extends munit.FunSuite {
       case _ => q
     }
 
-  test("MultiQuery.mapLastTerm maps last Term in last Query (OR)") {
-    val mq = MultiQuery(Or(Term("cats"), Term("dogs")))
-    val expected = MultiQuery(Or(Term("cats"), Or(Term("dogs"), Prefix("dogs"))))
-    assertEquals(mq.mapLastTerm(expandQ), expected)
+  test("Or#mapLastTerm maps last Term in last Query (OR)") {
+    val q = Or(Term("cats"), Term("dogs"))
+    val expected = Or(Term("cats"), Or(Term("dogs"), Prefix("dogs")))
+    assertEquals(q.mapLastTerm(expandQ), expected)
   }
 
-  test("MultiQuery.mapLastTerm maps last Term in last Query (AND)") {
-    val mq = MultiQuery(And(Term("cats"), Term("dogs")))
-    val expected = MultiQuery(And(Term("cats"), Or(Term("dogs"), Prefix("dogs"))))
-    assertEquals(mq.mapLastTerm(expandQ), expected)
+  test("And#mapLastTerm maps last Term in last Query (AND)") {
+    val q = And(Term("cats"), Term("dogs"))
+    val expected = And(Term("cats"), Or(Term("dogs"), Prefix("dogs")))
+    assertEquals(q.mapLastTerm(expandQ), expected)
   }
 
-  test("MultiQuery.mapLastTerm maps last Term in last Query (NOT)") {
-    val mq = MultiQuery(Term("cats"), Not(Term("dogs")))
-    val expected = MultiQuery(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs"))))
-    assertEquals(mq.mapLastTerm(expandQ), expected)
+  test("Or#mapLastTerm maps last Term in last Query (NOT)") {
+    val q = Or(Term("cats"), Not(Term("dogs")))
+    val expected = Or(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs"))))
+    assertEquals(q.mapLastTerm(expandQ), expected)
   }
 
-  test("MultiQuery.mapLastTerm maps last Term in last Query (OR + NOT)") {
-    val mq = MultiQuery(Or(Term("cats"), Not(Term("dogs"))))
-    val expected = MultiQuery(Or(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs")))))
-    assertEquals(mq.mapLastTerm(expandQ), expected)
+  test("And#mapLastTerm maps last Term in last Query (NOT)") {
+    val q = And(Term("cats"), Not(Term("dogs")))
+    val expected = And(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs"))))
+    assertEquals(q.mapLastTerm(expandQ), expected)
   }
 
   test("MultiQuery.mapLastTerm does nothing for ending minimum-should-match query") {

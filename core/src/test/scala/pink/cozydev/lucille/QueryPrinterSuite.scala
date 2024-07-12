@@ -21,12 +21,6 @@ import cats.data.NonEmptyList
 
 class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
 
-  test("prints MultiQuery query") {
-    val q = MultiQuery(NonEmptyList.of(Term("hello"), Term("hi")))
-    val str = QueryPrinter.print(q)
-    assertEquals(str, "hello hi")
-  }
-
   test("prints OR query") {
     val q = Or(NonEmptyList.of(Term("hello"), Term("hi")))
     val str = QueryPrinter.print(q)

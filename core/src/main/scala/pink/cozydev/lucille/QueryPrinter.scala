@@ -38,7 +38,6 @@ object QueryPrinter {
 
     def printQ(query: Query): Unit =
       query match {
-        case q: MultiQuery => printEachNel(q.qs, " ")
         case q: TermQuery => strTermQuery(q)
         case q: Or => printEachNel(q.qs, " OR ")
         case q: And => printEachNel(q.qs, " AND ")

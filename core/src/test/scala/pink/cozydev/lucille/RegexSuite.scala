@@ -15,21 +15,15 @@
  */
 
 package pink.cozydev.lucille
-import cats.data.NonEmptyList
 import Query._
 
 class RegexSuite extends munit.FunSuite {
 
   val parseQ = QueryParser.parse(_)
 
-  def assertSingleQ(r: Either[String, MultiQuery], expected: Query)(implicit
-      loc: munit.Location
-  ) =
-    assertEquals(r, Right(MultiQuery(NonEmptyList.one(expected))))
-
   test("parse single regex with wildcard star") {
     val r = parseQ("/jump.*/")
-    assertSingleQ(r, TermRegex("jump.*"))
+    assertEquals(r, Right(TermRegex("jump.*")))
   }
 
   test("does not parse without ending slash") {
@@ -39,17 +33,17 @@ class RegexSuite extends munit.FunSuite {
 
   test("parse regex with repeat min-max") {
     val r = parseQ("/hi{1,5}/")
-    assertSingleQ(r, TermRegex("hi{1,5}"))
+    assertEquals(r, Right(TermRegex("hi{1,5}")))
   }
 
   test("parse multipe regex in a group") {
     val r = parseQ("(/jump.*/ /.ouse/)")
-    assertSingleQ(r, Group(Or(TermRegex("jump.*"), TermRegex(".ouse"))))
+    assertEquals(r, Right(Group(Or(TermRegex("jump.*"), TermRegex(".ouse")))))
   }
 
   test("parse regex with escaped slash") {
     val r = parseQ("""/home\/.*/""")
-    assertSingleQ(r, TermRegex("""home\/.*"""))
+    assertEquals(r, Right(TermRegex("""home\/.*""")))
   }
 
 }
