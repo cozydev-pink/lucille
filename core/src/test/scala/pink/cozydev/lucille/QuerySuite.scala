@@ -88,13 +88,6 @@ class QuerySuite extends munit.FunSuite {
     assertEquals(q1.not, expected)
   }
 
-  test("Query.group groups Query and argument") {
-    val q1 = Term("dogs")
-    val q2 = Term("cats")
-    val expected = Group(NonEmptyList.of(q1, q2))
-    assertEquals(q1.group(q2), expected)
-  }
-
   test("Query.boost boosts Query with argument") {
     val q1 = Term("dogs")
     val expected = Boost(q1, 100)

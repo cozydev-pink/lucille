@@ -34,8 +34,6 @@ sealed trait Query extends Product with Serializable {
 
   def not: Query = Query.Not(this)
 
-  def group(q: Query): Query = Query.Group(this, q)
-
   def boost(b: Float): Query = Query.Boost(this, b)
 }
 
