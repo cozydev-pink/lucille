@@ -36,6 +36,25 @@ class QueryParser(
   private def notQ(query: P[Query]): P[Query] =
     ((P.string("NOT").soft ~ maybeSpace) *> query).map(Not.apply)
 
+  /** Parse a unary plus query
+    * e.g. '+cat', '+(cats AND dogs)'
+    */
+  private def unaryPlus(query: P[Query]): P[UnaryPlus] =
+    P.char('+') *> query.map(UnaryPlus.apply)
+
+  /** Parse a unary minus query
+    * e.g. 'cat'*, '-(cats AND dogs)'
+    */
+  private def unaryMinus(query: P[Query]): P[UnaryMinus] =
+    P.char('-') *> query.map(UnaryMinus.apply)
+
+  /** Parse a field query
+    * e.g. 'title:cats', 'author:"Silly Goose"', 'title:(cats AND dogs)'
+    */
+  private val fieldValueSoft: P[String] = term.soft <* pchar(':')
+  private def fieldQuery(query: P[Query]): P[Field] =
+    (fieldValueSoft ~ query).map { case (f, q) => Field(f, q) }
+
   /**  Parse a boost query
     * e.g. 'cats^2', '(dogs)^3.1', 'field:term^2.5'
     */
@@ -51,38 +70,23 @@ class QueryParser(
     */
   private def minimumMatchQ(query: P[Query]): P[MinimumMatch] = {
     val matchNum = P.char('@') *> int <* queryEnd
-    val grouped = nonGroupedNEL(query).between(P.char('('), P.char(')'))
+    val grouped = nelQueries(query).between(P.char('('), P.char(')'))
     (grouped.soft ~ matchNum).map { case (qs, n) => MinimumMatch(qs, n) }
   }
 
-  /** Parse a field query
-    * e.g. 'title:cats', 'author:"Silly Goose"', 'title:(cats AND dogs)'
+  /** Parse a whole list of queries without wrapping in the default boolean operator.
+    * e.g. 'q0 q1 OR q2 q3'.
+    * Parsing repeats so that we can parse q3, the first iteration only gets 'q0 q1 OR q2'
     */
-  private val fieldValueSoft: P[String] = term.soft <* pchar(':')
-  private def fieldQuery(query: P[Query]): P[Field] =
-    (fieldValueSoft ~ query).map { case (f, q) => Field(f, q) }
+  private def nelQueries(query: P[Query]): P[NonEmptyList[Query]] =
+    (maybeSpace.with1 *> qWithSuffixOps(query)).repUntil(maybeSpace ~ P.end).map(_.flatten)
 
-  /** Parse a unary plus query
-    * e.g. '+cat', '+(cats AND dogs)'
+  /** Parse simple queries followed by suffix op queries
+    * e.g. 'q0 q1 OR q2'
     */
-  private def unaryPlus(query: P[Query]): P[UnaryPlus] =
-    P.char('+') *> query.map(UnaryPlus.apply)
-
-  /** Parse a unary minus query
-    * e.g. 'cat'*, '-(cats AND dogs)'
-    */
-  private def unaryMinus(query: P[Query]): P[UnaryMinus] =
-    P.char('-') *> query.map(UnaryMinus.apply)
-
-  /**  Parse a group query
-    * e.g. '(cats AND dogs)'
-    */
-  private def groupQ(query: P[Query]): P[Group] = {
-    val g = nonGrouped(query)
-      .between(P.char('('), P.char(')'))
-    val endOfGroupSpecial = P.char('@')
-    (g <* P.not(endOfGroupSpecial)).map(Group.apply)
-  }
+  private def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
+    (query.repSep(sp.rep) ~ suffixOps(query))
+      .map { case (h, t) => internal.Op.associateOps(h, t, defaultBooleanOR) }
 
   /** Parse a suffix op query
     * e.g. 'OR term1 OR term2$' parses completely
@@ -92,30 +96,26 @@ class QueryParser(
     ((maybeSpace.with1 *> infixOp <* sp.rep) ~ query)
       .repUntil0(maybeSpace *> (P.end | query))
 
-  /** Parse simple queries followed by suffix op queries
-    * e.g. 'q0 q1 OR q2'
+  /**  Parse a group query
+    * e.g. '(cats AND dogs)'
     */
-  private def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
-    (query.repSep(sp.rep) ~ suffixOps(query))
-      .map { case (h, t) => internal.Op.associateOps(h, t, defaultBooleanOR) }
+  private def groupQ(query: P[Query]): P[Group] = {
+    val g = wrappedQueries(query)
+      .between(P.char('('), P.char(')'))
+    val endOfGroupSpecial = P.char('@')
+    (g <* P.not(endOfGroupSpecial)).map(Group.apply)
+  }
 
-  /** Parse a whole list of queries
-    * e.g. 'q0 q1 OR q2 q3'
+  /** Parse a whole list of queries and wrap them in the default boolean operator.
+    * e.g. 'q0 q1 OR q2 q3'.
     * Parsing repeats so that we can parse q3, the first iteration only gets 'q0 q1 OR q2'
     */
-  private def nonGrouped(query: P[Query]): P[Query] =
-    nonGroupedNEL(query).map {
+  private def wrappedQueries(query: P[Query]): P[Query] =
+    nelQueries(query).map {
       case NonEmptyList(singleQ, Nil) => singleQ
       case multipleQs =>
         if (defaultBooleanOR) Or.apply(multipleQs) else And.apply(multipleQs)
     }
-
-  /** Parse a whole list of queries
-    * e.g. 'q0 q1 OR q2 q3'
-    * Parsing repeats so that we can parse q3, the first iteration only gets 'q0 q1 OR q2'
-    */
-  private def nonGroupedNEL(query: P[Query]): P[NonEmptyList[Query]] =
-    (maybeSpace.with1 *> qWithSuffixOps(query)).repUntil(maybeSpace ~ P.end).map(_.flatten)
 
   /** Recursively parse compound queries
     * The order is very important:
@@ -142,9 +142,8 @@ class QueryParser(
     )
   )
 
-  /** Parse one or more queries implicitly grouped together in a list
-    */
-  val fullQuery = nonGrouped(recursiveQ) <* maybeSpace
+  /** Parse one or more queries implicitly grouped together in a list */
+  val fullQuery = wrappedQueries(recursiveQ) <* maybeSpace
 
   private def errorMsg(err: cats.parse.Parser.Error): String = {
     val exps = err.expected.map(_.show).mkString_("\n")
@@ -155,7 +154,6 @@ class QueryParser(
   def parse(input: String): Either[String, Query] =
     fullQuery
       .parseAll(input)
-      // .map(q => if (defaultBooleanOR) Or.apply(q) else And.apply(q))
       .leftMap(errorMsg)
 
 }
