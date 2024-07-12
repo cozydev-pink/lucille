@@ -49,8 +49,6 @@ class QueryParser(
   /**  Parse a minimum match query
     * e.g. '(one two three)@2'
     */
-  // TODO well... this changes things
-  // There really is not an implicit boolean here. it truly is a list!
   private def minimumMatchQ(query: P[Query]): P[MinimumMatch] = {
     val matchNum = P.char('@') *> int <* queryEnd
     val grouped = nonGroupedNEL(query).between(P.char('('), P.char(')'))
