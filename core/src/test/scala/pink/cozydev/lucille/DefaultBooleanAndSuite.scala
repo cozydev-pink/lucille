@@ -20,7 +20,7 @@ import pink.cozydev.lucille.Query._
 
 class DefaultBooleanAndSuite extends munit.FunSuite {
 
-  val parser = new QueryParser(defaultBooleanOR = false)
+  val parser = QueryParser.withDefaultOperatorAND
   val parseQ = parser.parse(_)
 
   test("DefaultBooleanAnd two terms") {

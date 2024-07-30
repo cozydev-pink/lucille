@@ -21,12 +21,24 @@ libraryDependencies += "pink.cozydev" %%% "lucille" % "@VERSION@"
 
 ### Parsing
 
-Lucille offers a `parse` function to parse a whole string into a Lucille `MultiQuery` structure:
+Lucille offers a `parse` function to parse a whole string into a Lucille `Query` structure:
 
 ```scala mdoc
 import pink.cozydev.lucille.QueryParser
 
-QueryParser.parse("cats OR dogs")
+QueryParser.default.parse("cats OR dogs")
+```
+
+The default `QueryParser` automatically inserts an `OR` operation inbetween consecutive terms.
+
+```scala mdoc
+QueryParser.withDefaultOperatorOR.parse("cats dogs")
+```
+
+This can be changed to an `AND` operation via `withDefaultOperatorAND`:
+
+```scala mdoc
+QueryParser.withDefaultOperatorAND.parse("cats dogs")
 ```
 
 ### Printing

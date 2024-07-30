@@ -159,11 +159,15 @@ class QueryParser(
 }
 object QueryParser {
 
-  val defaultParser = new QueryParser(defaultBooleanOR = true)
+  val default = new QueryParser(defaultBooleanOR = true)
+
+  def withDefaultOperatorOR = default
+
+  def withDefaultOperatorAND = new QueryParser(defaultBooleanOR = false)
 
   /** Attempt to parse a whole string representing a Lucene query */
   def parse(input: String): Either[String, Query] =
-    defaultParser.parse(input)
+    default.parse(input)
 
 }
 
