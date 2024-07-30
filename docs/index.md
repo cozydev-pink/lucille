@@ -82,7 +82,7 @@ def expandQ(q: Query): Query =
   }
 ```
 
-We can now use `expandQ` along with `mapLastTerm` to rewrite the last term of a `MultiQuery` into our
+We can now use `expandQ` along with `mapLastTerm` to rewrite the last term of a `Query` into our
 expanded term + prefix:
 
 ```scala mdoc
