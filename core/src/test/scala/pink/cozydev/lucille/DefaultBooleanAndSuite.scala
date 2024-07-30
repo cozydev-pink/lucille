@@ -47,4 +47,10 @@ class DefaultBooleanAndSuite extends munit.FunSuite {
     assertEquals(actual, Right(expected))
   }
 
+  test("DefaultBooleanAnd terms in a group with explicit OR") {
+    val actual = parseQ("(cats OR dogs)")
+    val expected = Group(Or(Term("cats"), Term("dogs")))
+    assertEquals(actual, Right(expected))
+  }
+
 }
