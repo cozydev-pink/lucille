@@ -111,20 +111,35 @@
 </span><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;pink.cozydev&quot;</span><span> %%% </span><span class="string-literal">&quot;lucille&quot;</span><span> % </span><span class="string-literal">&quot;0.0.2&quot;</span></code></pre>
         
         <h3 id="parsing" class="section"><a class="anchor-link left" href="#parsing"><i class="icofont-laika link">&#xef71;</i></a>Parsing</h3>
-        <p>Lucille offers a <code>parse</code> function to parse a whole string into a Lucille <code>MultiQuery</code> structure:</p>
-        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">pink</span><span>.</span><span class="identifier">cozydev</span><span>.</span><span class="identifier">lucille</span><span>.</span><span class="type-name">QueryParser</span><span>
+        <p>Lucille offers a <code>parse</code> function to parse a whole string into a Lucille <code>Query</code> structure:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">pink</span><span>.</span><span class="identifier">cozydev</span><span>.</span><span class="identifier">lucille</span><span>.</span><span class="type-name">QueryParser</span><span>
 
-</span><span class="type-name">QueryParser</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats OR dogs&quot;</span><span>)
-</span><span class="comment">// res0: Either[String, pink.cozydev.lucille.MultiQuery] = Right(
-//   value = MultiQuery(
+</span><span class="type-name">QueryParser</span><span>.</span><span class="keyword">default</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats OR dogs&quot;</span><span>)
+</span><span class="comment">// res0: Either[String, pink.cozydev.lucille.Query] = Right(
+//   value = Or(
 //     qs = NonEmptyList(
-//       head = Or(
-//         qs = NonEmptyList(
-//           head = Term(str = &quot;cats&quot;),
-//           tail = List(Term(str = &quot;dogs&quot;))
-//         )
-//       ),
-//       tail = List()
+//       head = Term(str = &quot;cats&quot;),
+//       tail = List(Term(str = &quot;dogs&quot;))
+//     )
+//   )
+// )</span></code></pre>
+        <p>The default <code>QueryParser</code> automatically inserts an <code>OR</code> operation inbetween consecutive terms.</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="type-name">QueryParser</span><span>.</span><span class="identifier">withDefaultOperatorOR</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats dogs&quot;</span><span>)
+</span><span class="comment">// res1: Either[String, pink.cozydev.lucille.Query] = Right(
+//   value = Or(
+//     qs = NonEmptyList(
+//       head = Term(str = &quot;cats&quot;),
+//       tail = List(Term(str = &quot;dogs&quot;))
+//     )
+//   )
+// )</span></code></pre>
+        <p>This can be changed to an <code>AND</code> operation via <code>withDefaultOperatorAND</code>:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="type-name">QueryParser</span><span>.</span><span class="identifier">withDefaultOperatorAND</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats dogs&quot;</span><span>)
+</span><span class="comment">// res2: Either[String, pink.cozydev.lucille.Query] = Right(
+//   value = And(
+//     qs = NonEmptyList(
+//       head = Term(str = &quot;cats&quot;),
+//       tail = List(Term(str = &quot;dogs&quot;))
 //     )
 //   )
 // )</span></code></pre>
@@ -135,7 +150,7 @@
 </span><span class="keyword">import</span><span> </span><span class="identifier">pink</span><span>.</span><span class="identifier">cozydev</span><span>.</span><span class="identifier">lucille</span><span>.</span><span class="type-name">QueryPrinter</span><span>
 
 </span><span class="type-name">QueryPrinter</span><span>.</span><span class="identifier">print</span><span>(</span><span class="type-name">Query</span><span>.</span><span class="type-name">And</span><span>(</span><span class="type-name">Query</span><span>.</span><span class="type-name">Term</span><span>(</span><span class="string-literal">&quot;cats&quot;</span><span>), </span><span class="type-name">Query</span><span>.</span><span class="type-name">Term</span><span>(</span><span class="string-literal">&quot;dogs&quot;</span><span>)))
-</span><span class="comment">// res1: String = &quot;cats AND dogs&quot;</span></code></pre>
+</span><span class="comment">// res3: String = &quot;cats AND dogs&quot;</span></code></pre>
         <p>Because the numeric value of a query boost parameter is modelled as a <code>Float</code>, the query printer
         has a <code>precision</code> parameter it uses to round the boost parameter for pretty printing:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">queryWithBoost</span><span> = </span><span class="type-name">Query</span><span>.</span><span class="type-name">Boost</span><span>(</span><span class="type-name">Query</span><span>.</span><span class="type-name">Phrase</span><span>(</span><span class="string-literal">&quot;apple pi&quot;</span><span>), </span><span class="number-literal">3.14159265f</span><span>)
@@ -146,10 +161,10 @@
 </span><span>
 </span><span class="comment">// the default precision is 2
 </span><span class="type-name">QueryPrinter</span><span>.</span><span class="identifier">print</span><span>(</span><span class="identifier">queryWithBoost</span><span>)
-</span><span class="comment">// res2: String = &quot;\&quot;apple pi\&quot;^3.14&quot;
+</span><span class="comment">// res4: String = &quot;\&quot;apple pi\&quot;^3.14&quot;
 </span><span>
 </span><span class="type-name">QueryPrinter</span><span>.</span><span class="identifier">print</span><span>(</span><span class="identifier">queryWithBoost</span><span>, </span><span class="identifier">precision</span><span>=</span><span class="number-literal">5</span><span>)
-</span><span class="comment">// res3: String = &quot;\&quot;apple pi\&quot;^3.14159&quot;</span></code></pre>
+</span><span class="comment">// res5: String = &quot;\&quot;apple pi\&quot;^3.14159&quot;</span></code></pre>
         
         <h3 id="last-query-rewriting" class="section"><a class="anchor-link left" href="#last-query-rewriting"><i class="icofont-laika link">&#xef71;</i></a>Last Query Rewriting</h3>
         <p>To enable a better interactive search experience, it can be helpful to rewrite the last term as a
@@ -163,11 +178,11 @@
     </span><span class="keyword">case</span><span> </span><span class="type-name">Query</span><span>.</span><span class="type-name">Term</span><span>(</span><span class="identifier">t</span><span>) =&gt; </span><span class="type-name">Query</span><span>.</span><span class="type-name">Or</span><span>(</span><span class="type-name">Query</span><span>.</span><span class="type-name">Term</span><span>(</span><span class="identifier">t</span><span>), </span><span class="type-name">Query</span><span>.</span><span class="type-name">Prefix</span><span>(</span><span class="identifier">t</span><span>))
     </span><span class="keyword">case</span><span> </span><span class="identifier">_</span><span> =&gt; </span><span class="identifier">q</span><span>
   }</span></code></pre>
-        <p>We can now use <code>expandQ</code> along with <code>mapLastTerm</code> to rewrite the last term of a <code>MultiQuery</code> into our
+        <p>We can now use <code>expandQ</code> along with <code>mapLastTerm</code> to rewrite the last term of a <code>Query</code> into our
         expanded term + prefix:</p>
         <pre><code class="nohighlight"><span class="type-name">QueryParser</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats meo&quot;</span><span>).</span><span class="identifier">map</span><span>(</span><span class="identifier">mq</span><span> =&gt; </span><span class="identifier">mq</span><span>.</span><span class="identifier">mapLastTerm</span><span>(</span><span class="identifier">expandQ</span><span>))
-</span><span class="comment">// res4: Either[String, pink.cozydev.lucille.MultiQuery] = Right(
-//   value = MultiQuery(
+</span><span class="comment">// res6: Either[String, Query] = Right(
+//   value = Or(
 //     qs = NonEmptyList(
 //       head = Term(str = &quot;cats&quot;),
 //       tail = List(
@@ -183,23 +198,18 @@
 // )</span></code></pre>
         <p>This also works when the last term is part of a boolean or field query.</p>
         <pre><code class="nohighlight"><span class="type-name">QueryParser</span><span>.</span><span class="identifier">parse</span><span>(</span><span class="string-literal">&quot;cats AND do&quot;</span><span>).</span><span class="identifier">map</span><span>(</span><span class="identifier">mq</span><span> =&gt; </span><span class="identifier">mq</span><span>.</span><span class="identifier">mapLastTerm</span><span>(</span><span class="identifier">expandQ</span><span>))
-</span><span class="comment">// res5: Either[String, pink.cozydev.lucille.MultiQuery] = Right(
-//   value = MultiQuery(
+</span><span class="comment">// res7: Either[String, Query] = Right(
+//   value = And(
 //     qs = NonEmptyList(
-//       head = And(
-//         qs = NonEmptyList(
-//           head = Term(str = &quot;cats&quot;),
-//           tail = List(
-//             Or(
-//               qs = NonEmptyList(
-//                 head = Term(str = &quot;do&quot;),
-//                 tail = List(Prefix(str = &quot;do&quot;))
-//               )
-//             )
+//       head = Term(str = &quot;cats&quot;),
+//       tail = List(
+//         Or(
+//           qs = NonEmptyList(
+//             head = Term(str = &quot;do&quot;),
+//             tail = List(Prefix(str = &quot;do&quot;))
 //           )
 //         )
-//       ),
-//       tail = List()
+//       )
 //     )
 //   )
 // )</span></code></pre>
