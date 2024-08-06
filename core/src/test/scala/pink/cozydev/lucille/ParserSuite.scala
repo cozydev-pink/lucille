@@ -16,16 +16,14 @@
 
 package pink.cozydev.lucille
 import cats.data.NonEmptyList
-import cats.parse.Parser.Error
 import Query._
-import Parser._
 
 class SingleSimpleQuerySuite extends munit.FunSuite {
 
-  def assertSingleTerm(r: Either[Error, MultiQuery], expected: Query)(implicit
-      loc: munit.Location
-  ) =
-    assertEquals(r, Right(MultiQuery(expected)))
+  val parseQ = QueryParser.parse(_)
+
+  def assertSingleTerm(r: Either[String, Query], expected: Query)(implicit loc: munit.Location) =
+    assertEquals(r, Right(expected))
 
   test("parse single term") {
     val r = parseQ("the")
@@ -89,7 +87,7 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
 
   test("parse field query with phrase") {
     val r = parseQ("fieldName:\"The cat jumped\"")
-    assertEquals(r, Right(MultiQuery(Field("fieldName", Phrase("The cat jumped")))))
+    assertEquals(r, Right(Field("fieldName", Phrase("The cat jumped"))))
   }
 
   test("parse single term with numbers") {
@@ -161,27 +159,29 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
 
 class MultiSimpleQuerySuite extends munit.FunSuite {
 
+  val parseQ = QueryParser.parse(_)
+
   test("parse multiple terms completely") {
     val r = parseQ("The cat jumped")
-    assertEquals(r, Right(MultiQuery(Term("The"), Term("cat"), Term("jumped"))))
+    assertEquals(r, Right(Or(Term("The"), Term("cat"), Term("jumped"))))
   }
 
   test("parse multiple terms with lots of spaces completely") {
     val r = parseQ("The cat   jumped   ")
-    assertEquals(r, Right(MultiQuery(Term("The"), Term("cat"), Term("jumped"))))
+    assertEquals(r, Right(Or(Term("The"), Term("cat"), Term("jumped"))))
   }
 
   test("parse field query and terms completely") {
     val r = parseQ("fieldName:The cat jumped")
     assertEquals(
       r,
-      Right(MultiQuery(Field("fieldName", Term("The")), Term("cat"), Term("jumped"))),
+      Right(Or(Field("fieldName", Term("The")), Term("cat"), Term("jumped"))),
     )
   }
 
   test("parse proximity query completely") {
     val r = parseQ("\"derp lerp\"~3")
-    assertEquals(r, Right(MultiQuery(Proximity("derp lerp", 3))))
+    assertEquals(r, Right(Proximity("derp lerp", 3)))
   }
 
   test("parse proximity with decimal does not parse") {
@@ -191,12 +191,12 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
 
   test("parse fuzzy term without number parses completely") {
     val r = parseQ("derp~")
-    assertEquals(r, Right(MultiQuery(Fuzzy("derp", None))))
+    assertEquals(r, Right(Fuzzy("derp", None)))
   }
 
   test("parse fuzzy term with number parses completely") {
     val r = parseQ("derp~2")
-    assertEquals(r, Right(MultiQuery(Fuzzy("derp", Some(2)))))
+    assertEquals(r, Right(Fuzzy("derp", Some(2))))
   }
 
   test("parse fuzzy term with decimal does not parse") {
@@ -207,14 +207,14 @@ class MultiSimpleQuerySuite extends munit.FunSuite {
 
 class QueryWithSuffixOpsSuite extends munit.FunSuite {
 
+  val parseQ = QueryParser.parse(_)
+
   test("parse two term OR query completely") {
     val r = parseQ("derp OR lerp")
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          Or(Term("derp"), Term("lerp"))
-        )
+        Or(Term("derp"), Term("lerp"))
       ),
     )
   }
@@ -224,9 +224,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          Or(Term("derp"), Term("lerp"), Term("slerp"))
-        )
+        Or(Term("derp"), Term("lerp"), Term("slerp"))
       ),
     )
   }
@@ -236,9 +234,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          Or(Term("derp"), Phrase("lerp slerp"))
-        )
+        Or(Term("derp"), Phrase("lerp slerp"))
       ),
     )
   }
@@ -278,9 +274,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          And(Term("derp"), Term("lerp"))
-        )
+        And(Term("derp"), Term("lerp"))
       ),
     )
   }
@@ -290,7 +284,8 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
+        // TODO unsure if I like this....
+        Or(
           Term("term"),
           Or(Term("derp"), Term("lerp")),
         )
@@ -303,7 +298,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
+        Or(
           Or(Term("derp"), Term("lerp")),
           Term("slerp"),
         )
@@ -316,7 +311,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
+        Or(
           And(Term("derp"), Term("lerp")),
           Term("slerp"),
         )
@@ -329,9 +324,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          And(Term("derp"), Phrase("lerp slerp"))
-        )
+        And(Term("derp"), Phrase("lerp slerp"))
       ),
     )
   }
@@ -341,9 +334,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          And(Term("derp"), Phrase("lerp slerp"))
-        )
+        And(Term("derp"), Phrase("lerp slerp"))
       ),
     )
   }
@@ -353,7 +344,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
+        Or(
           And(Term("derp"), Term("lerp")),
           Term("slerp"),
           Or(Term("orA"), Term("orB")),
@@ -368,9 +359,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          Not(Term("derp"))
-        )
+        Not(Term("derp"))
       ),
     )
   }
@@ -380,9 +369,7 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          And(Term("derp"), Not(Term("lerp")))
-        )
+        And(Term("derp"), Not(Term("lerp")))
       ),
     )
   }
@@ -390,12 +377,14 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
 
 class GroupQuerySuite extends munit.FunSuite {
 
+  val parseQ = QueryParser.parse(_)
+
   test("parse multiple terms in a group") {
     val r = parseQ("(The cat jumped)")
     assertEquals(
       r,
       Right(
-        MultiQuery(Group(Term("The"), Term("cat"), Term("jumped")))
+        Group(Or(Term("The"), Term("cat"), Term("jumped")))
       ),
     )
   }
@@ -405,7 +394,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Group(Term("The"), Term("cat"), Term("jumped")))
+        Group(Or(Term("The"), Term("cat"), Term("jumped")))
       ),
     )
   }
@@ -415,7 +404,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
+        Or(
           Term("animals"),
           Not(
             Group(And(Term("cats"), Term("dogs")))
@@ -430,11 +419,9 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          Field(
-            "title",
-            Group(And(Term("cats"), Term("dogs"))),
-          )
+        Field(
+          "title",
+          Group(And(Term("cats"), Term("dogs"))),
         )
       ),
     )
@@ -445,13 +432,11 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          And(
-            Field("title", Term("test")),
-            Group(
-              Or(Term("pass"), Term("fail"))
-            ),
-          )
+        And(
+          Field("title", Term("test")),
+          Group(
+            Or(Term("pass"), Term("fail"))
+          ),
         )
       ),
     )
@@ -470,7 +455,7 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Group(gq), Term("extra"))
+        Or(Group(gq), Term("extra"))
       ),
     )
   }
@@ -488,11 +473,9 @@ class GroupQuerySuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          And(
-            Group(gq),
-            Phrase("extra phrase"),
-          )
+        And(
+          Group(gq),
+          Phrase("extra phrase"),
         )
       ),
     )

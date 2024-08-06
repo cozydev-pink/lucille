@@ -43,26 +43,6 @@ sealed trait TermQuery extends Query {
   def mapLastTerm(f: Query.Term => Query): Query = this
 }
 
-/** A trait for a list of one or more queries
-  *
-  * @param qs the queries
-  */
-final case class MultiQuery(qs: NonEmptyList[Query]) extends Query {
-
-  def mapLastTerm(f: Query.Term => Query): MultiQuery = {
-    val newLast: Query = qs.last.mapLastTerm(f)
-    if (qs.size == 1) MultiQuery(NonEmptyList.one(newLast))
-    else {
-      val newT = qs.tail.init :+ newLast
-      MultiQuery(NonEmptyList(qs.head, newT))
-    }
-  }
-}
-object MultiQuery {
-  def apply(head: Query, tail: Query*): MultiQuery =
-    MultiQuery(NonEmptyList(head, tail.toList))
-}
-
 object Query {
 
   /** A term query
@@ -178,12 +158,8 @@ object Query {
     *
     * @param qs the queries to group
     */
-  final case class Group(qs: NonEmptyList[Query]) extends Query {
+  final case class Group(q: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): Group = this
-  }
-  object Group {
-    def apply(head: Query, tail: Query*): Group =
-      Group(NonEmptyList(head, tail.toList))
   }
 
   /** A unary plus query

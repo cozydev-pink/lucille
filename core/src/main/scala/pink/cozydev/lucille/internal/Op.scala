@@ -29,7 +29,11 @@ private[lucille] object Op {
     * @param qs suffixOp and query pairs
     * @return
     */
-  def associateOps(q1: NonEmptyList[Query], opQs: List[(Op, Query)]): NonEmptyList[Query] = {
+  def associateOps(
+      q1: NonEmptyList[Query],
+      opQs: List[(Op, Query)],
+      defaultBooleanOR: Boolean,
+  ): NonEmptyList[Query] = {
     def go(acc: NonEmptyList[Query], op: Op, opQs: List[(Op, Query)]): NonEmptyList[Query] =
       opQs match {
         case Nil =>
@@ -45,10 +49,10 @@ private[lucille] object Op {
             case (AND, OR) =>
               go(NonEmptyList.of(q), nextOp, tailOpP).prepend(Query.And(acc))
             case (OR, AND) =>
-              // TODO we only get away with not wrapping the `allButLast` in an Or
-              //  because `OR` is the default query type. This should be configurable
-              val allButLast = NonEmptyList(acc.head, acc.tail.dropRight(1))
-              allButLast.concatNel(go(NonEmptyList.of(acc.last, q), nextOp, tailOpP))
+              if (defaultBooleanOR) {
+                val allButLast = NonEmptyList(acc.head, acc.tail.dropRight(1))
+                allButLast.concatNel(go(NonEmptyList.of(acc.last, q), nextOp, tailOpP))
+              } else go(NonEmptyList.of(q), nextOp, tailOpP).prepend(Query.And(acc))
           }
       }
 

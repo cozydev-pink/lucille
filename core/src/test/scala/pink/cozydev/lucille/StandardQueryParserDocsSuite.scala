@@ -17,18 +17,19 @@
 package pink.cozydev.lucille
 import cats.data.NonEmptyList
 import Query._
-import Parser._
 
 // Cases taken from the Lucene StandardQueryParser docs
 // https://lucene.apache.org/core/9_4_1/queryparser/org/apache/lucene/queryparser/flexible/standard/StandardQueryParser.html
 class StandardQueryParserDocsSuite extends munit.FunSuite {
+
+  val parseQ = QueryParser.parse(_)
 
   test("test") {
     val r = parseQ("test")
     assertEquals(
       r,
       Right(
-        MultiQuery(Term("test"))
+        Term("test")
       ),
     )
   }
@@ -38,7 +39,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Term("test"), Term("equipment"))
+        Or(Term("test"), Term("equipment"))
       ),
     )
   }
@@ -48,7 +49,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Proximity("test failure", 4))
+        Proximity("test failure", 4)
       ),
     )
   }
@@ -58,7 +59,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Prefix("tes"))
+        Prefix("tes")
       ),
     )
   }
@@ -68,7 +69,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(TermRegex(".est(s|ing)"))
+        TermRegex(".est(s|ing)")
       ),
     )
   }
@@ -78,7 +79,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Fuzzy("nest", Some(4)))
+        Fuzzy("nest", Some(4))
       ),
     )
   }
@@ -88,7 +89,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(Field("title", Term("test")))
+        Field("title", Term("test"))
       ),
     )
   }
@@ -98,9 +99,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          Field("title", Group(Or(Term("die"), Term("hard"))))
-        )
+        Field("title", Group(Or(Term("die"), Term("hard"))))
       ),
     )
   }
@@ -110,7 +109,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(And(Term("test"), Term("results")))
+        And(Term("test"), Term("results"))
       ),
     )
   }
@@ -120,11 +119,9 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          And(
-            Field("title", Term("test")),
-            Not(Field("title", Term("complete"))),
-          )
+        And(
+          Field("title", Term("test")),
+          Not(Field("title", Term("complete"))),
         )
       ),
     )
@@ -135,16 +132,14 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          And(
-            Field("title", Term("test")),
-            Group(
-              Or(
-                Prefix("pass"),
-                Prefix("fail"),
-              )
-            ),
-          )
+        And(
+          Field("title", Term("test")),
+          Group(
+            Or(
+              Prefix("pass"),
+              Prefix("fail"),
+            )
+          ),
         )
       ),
     )
@@ -155,9 +150,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          Field("title", Group(Term("pass"), Term("fail"), Term("skip")))
-        )
+        Field("title", Group(Or(Term("pass"), Term("fail"), Term("skip"))))
       ),
     )
   }
@@ -167,14 +160,14 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          Field(
-            "title",
-            Group(
+        Field(
+          "title",
+          Group(
+            Or(
               UnaryPlus(Term("test")),
               UnaryPlus(Phrase("result unknown")),
-            ),
-          )
+            )
+          ),
         )
       ),
     )
@@ -184,7 +177,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("name:[Jones TO Smith]")
     assertEquals(
       r,
-      Right(MultiQuery(Field("name", TermRange(Some("Jones"), Some("Smith"), true, true)))),
+      Right(Field("name", TermRange(Some("Jones"), Some("Smith"), true, true))),
     )
   }
 
@@ -192,7 +185,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("score:{2.5 TO 7.3}")
     assertEquals(
       r,
-      Right(MultiQuery(Field("score", TermRange(Some("2.5"), Some("7.3"), false, false)))),
+      Right(Field("score", TermRange(Some("2.5"), Some("7.3"), false, false))),
     )
   }
 
@@ -200,7 +193,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("score:{2.5 TO *]")
     assertEquals(
       r,
-      Right(MultiQuery(Field("score", TermRange(Some("2.5"), None, false, true)))),
+      Right(Field("score", TermRange(Some("2.5"), None, false, true))),
     )
   }
 
@@ -208,7 +201,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     val r = parseQ("jones^2 OR smith^0.5")
     assertEquals(
       r,
-      Right(MultiQuery(Or(Boost(Term("jones"), 2f), Boost(Term("smith"), 0.5f)))),
+      Right(Or(Boost(Term("jones"), 2f), Boost(Term("smith"), 0.5f))),
     )
   }
 
@@ -217,11 +210,10 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          Or(
-            Field("field", Boost(Group(Or(Term("a"), Term("b")), Not(Term("c"))), 2.5f)),
-            Field("field", Term("d")),
-          )
+        Or(
+          // TODO I don't like the group or the nested Or's
+          Field("field", Boost(Group(Or(Or(Term("a"), Term("b")), Not(Term("c")))), 2.5f)),
+          Field("field", Term("d")),
         )
       ),
     )
@@ -237,9 +229,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          MinimumMatch(NonEmptyList.of(Term("blue"), Term("crab"), Term("fish")), 2)
-        )
+        MinimumMatch(NonEmptyList.of(Term("blue"), Term("crab"), Term("fish")), 2)
       ),
     )
   }
@@ -249,17 +239,15 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     assertEquals(
       r,
       Right(
-        MultiQuery(
-          MinimumMatch(
-            NonEmptyList.of(
-              Group(
-                Or(Term("yellow"), Term("blue"))
-              ),
-              Term("crab"),
-              Term("fish"),
+        MinimumMatch(
+          NonEmptyList.of(
+            Group(
+              Or(Term("yellow"), Term("blue"))
             ),
-            2,
-          )
+            Term("crab"),
+            Term("fish"),
+          ),
+          2,
         )
       ),
     )

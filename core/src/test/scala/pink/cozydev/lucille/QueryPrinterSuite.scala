@@ -21,12 +21,6 @@ import cats.data.NonEmptyList
 
 class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
 
-  test("prints MultiQuery query") {
-    val q = MultiQuery(NonEmptyList.of(Term("hello"), Term("hi")))
-    val str = QueryPrinter.print(q)
-    assertEquals(str, "hello hi")
-  }
-
   test("prints OR query") {
     val q = Or(NonEmptyList.of(Term("hello"), Term("hi")))
     val str = QueryPrinter.print(q)
@@ -40,15 +34,15 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
   }
 
   test("prints Not query") {
-    val q = Not(Group(NonEmptyList.of(Term("hello"), Term("hi"))))
+    val q = Not(Group(Or(Term("hello"), Term("hi"))))
     val str = QueryPrinter.print(q)
-    assertEquals(str, "NOT (hello hi)")
+    assertEquals(str, "NOT (hello OR hi)")
   }
 
   test("prints Group query") {
-    val q = Group(NonEmptyList.of(Term("hello"), Term("hi")))
+    val q = Group(Or(Term("hello"), Term("hi")))
     val str = QueryPrinter.print(q)
-    assertEquals(str, "(hello hi)")
+    assertEquals(str, "(hello OR hi)")
   }
 
   test("prints UnaryMinus query") {
@@ -106,21 +100,21 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
   }
 
   test("prints Boost query with group") {
-    val q = Boost(Group(Term("hello"), Field("fieldB", Term("d"))), 3.1f)
+    val q = Boost(Group(Or(Term("hello"), Field("fieldB", Term("d")))), 3.1f)
     val str = QueryPrinter.print(q)
-    assertEquals(str, "(hello fieldB:d)^3.10")
+    assertEquals(str, "(hello OR fieldB:d)^3.10")
   }
 
   test("prints Boost query with other queries included") {
     val q = Or(
       Boost(
-        Or(Field("fieldA", Group(NonEmptyList.of(Or(Term("a"), Term("b")), Not(Term("c")))))),
+        Or(Field("fieldA", Group(Or(Or(Term("a"), Term("b")), Not(Term("c")))))),
         2.50f,
       ),
       Field("fieldB", Term("d")),
     )
     val str = QueryPrinter.print(q)
-    assertEquals(str, "(fieldA:(a OR b NOT c))^2.50 OR fieldB:d")
+    assertEquals(str, "(fieldA:(a OR b OR NOT c))^2.50 OR fieldB:d")
   }
 
   test("prints Field query") {

@@ -15,41 +15,36 @@
  */
 
 package pink.cozydev.lucille
-import cats.parse.Parser.Error
 import Query._
-import Parser._
 
 // Similar to the SingleSimpleQuerySuite but with a focus on queries with punctuation
 class PunctuationSuite extends munit.FunSuite {
 
-  def assertSingleQ(r: Either[Error, MultiQuery], expected: Query)(implicit
-      loc: munit.Location
-  ) =
-    assertEquals(r, Right(MultiQuery(expected)))
+  val parseQ = QueryParser.parse(_)
 
   test("parse single term with period") {
     val r = parseQ("typelevel.com")
-    assertSingleQ(r, Term("typelevel.com"))
+    assertEquals(r, Right(Term("typelevel.com")))
   }
 
   test("parse single term with slash") {
     val r = parseQ("typelevel.com/cats")
-    assertSingleQ(r, Term("typelevel.com/cats"))
+    assertEquals(r, Right(Term("typelevel.com/cats")))
   }
 
   test("parse single term with dash") {
     val r = parseQ("cats-effect")
-    assertSingleQ(r, Term("cats-effect"))
+    assertEquals(r, Right(Term("cats-effect")))
   }
 
   test("parse single term with '@'") {
     val r = parseQ("first.last@email.com")
-    assertSingleQ(r, Term("first.last@email.com"))
+    assertEquals(r, Right(Term("first.last@email.com")))
   }
 
   test("parse fieldQ with phraseQ with dash") {
     val r = parseQ("name:\"cats-effect\"")
-    assertSingleQ(r, Field("name", Phrase("cats-effect")))
+    assertEquals(r, Right(Field("name", Phrase("cats-effect"))))
   }
 
 }

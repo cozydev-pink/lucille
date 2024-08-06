@@ -20,52 +20,55 @@ import pink.cozydev.lucille.Query._
 import cats.data.NonEmptyList
 
 class QuerySuite extends munit.FunSuite {
+
+  val parseQ = QueryParser.parse(_)
+
   def expandQ(q: Query): Query =
     q match {
       case Query.Term(t) => Query.Or(Query.Term(t), Query.Prefix(t))
       case _ => q
     }
 
-  test("MultiQuery.mapLastTerm maps last Term in last Query (OR)") {
-    val mq = MultiQuery(Or(Term("cats"), Term("dogs")))
-    val expected = MultiQuery(Or(Term("cats"), Or(Term("dogs"), Prefix("dogs"))))
-    assertEquals(mq.mapLastTerm(expandQ), expected)
+  test("Or#mapLastTerm maps last Term in last Query (OR)") {
+    val q = Or(Term("cats"), Term("dogs"))
+    val expected = Or(Term("cats"), Or(Term("dogs"), Prefix("dogs")))
+    assertEquals(q.mapLastTerm(expandQ), expected)
   }
 
-  test("MultiQuery.mapLastTerm maps last Term in last Query (AND)") {
-    val mq = MultiQuery(And(Term("cats"), Term("dogs")))
-    val expected = MultiQuery(And(Term("cats"), Or(Term("dogs"), Prefix("dogs"))))
-    assertEquals(mq.mapLastTerm(expandQ), expected)
+  test("And#mapLastTerm maps last Term in last Query (AND)") {
+    val q = And(Term("cats"), Term("dogs"))
+    val expected = And(Term("cats"), Or(Term("dogs"), Prefix("dogs")))
+    assertEquals(q.mapLastTerm(expandQ), expected)
   }
 
-  test("MultiQuery.mapLastTerm maps last Term in last Query (NOT)") {
-    val mq = MultiQuery(Term("cats"), Not(Term("dogs")))
-    val expected = MultiQuery(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs"))))
-    assertEquals(mq.mapLastTerm(expandQ), expected)
+  test("Or#mapLastTerm maps last Term in last Query (NOT)") {
+    val q = Or(Term("cats"), Not(Term("dogs")))
+    val expected = Or(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs"))))
+    assertEquals(q.mapLastTerm(expandQ), expected)
   }
 
-  test("MultiQuery.mapLastTerm maps last Term in last Query (OR + NOT)") {
-    val mq = MultiQuery(Or(Term("cats"), Not(Term("dogs"))))
-    val expected = MultiQuery(Or(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs")))))
-    assertEquals(mq.mapLastTerm(expandQ), expected)
+  test("And#mapLastTerm maps last Term in last Query (NOT)") {
+    val q = And(Term("cats"), Not(Term("dogs")))
+    val expected = And(Term("cats"), Not(Or(Term("dogs"), Prefix("dogs"))))
+    assertEquals(q.mapLastTerm(expandQ), expected)
   }
 
-  test("MultiQuery.mapLastTerm does nothing for ending minimum-should-match query") {
+  test("Query.mapLastTerm does nothing for ending minimum-should-match query") {
     val qs = "(apple banana orange)@2"
-    val mq = Parser.parseQ(qs)
-    assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
+    val q = parseQ(qs)
+    assertEquals(q.map(_.mapLastTerm(expandQ)), q)
   }
 
-  test("MultiQuery.mapLastTerm does nothing for ending range query") {
+  test("Query.mapLastTerm does nothing for ending range query") {
     val qs = "name:[cats TO fs2]"
-    val mq = Parser.parseQ(qs)
-    assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
+    val q = parseQ(qs)
+    assertEquals(q.map(_.mapLastTerm(expandQ)), q)
   }
 
-  test("MultiQuery.mapLastTerm does nothing for ending group query") {
+  test("Query.mapLastTerm does nothing for ending group query") {
     val qs = "cats AND (dogs OR fish)"
-    val mq = Parser.parseQ(qs)
-    assertEquals(mq.map(_.mapLastTerm(expandQ)), mq)
+    val q = parseQ(qs)
+    assertEquals(q.map(_.mapLastTerm(expandQ)), q)
   }
 
   test("Query.and performs logical AND with Query and argument") {
