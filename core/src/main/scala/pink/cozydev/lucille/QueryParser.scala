@@ -59,7 +59,7 @@ class QueryParser(
     * e.g. 'cats^2', '(dogs)^3.1', 'field:term^2.5'
     */
   private def boostQ(query: P[Query]): P[Boost] = {
-    val limitedQ = fieldQuery(query) | termQ | phraseQ | groupQ(query)
+    val limitedQ = fieldQuery(query) | termAndWildCardQ | phraseQ | groupQ(query)
     (limitedQ.withContext("limitedQ").soft ~ (P.char('^') *> float <* queryEnd)).map(qf =>
       Boost(qf._1, qf._2)
     )
@@ -119,7 +119,7 @@ class QueryParser(
 
   /** Recursively parse compound queries
     * The order is very important:
-    * - prefixT must come before termQ
+    * - termAndWildCardQ should be near last, below boostQ
     */
   private val recursiveQ: P[Query] = P.recursive[Query](r =>
     P.oneOf(
@@ -131,10 +131,9 @@ class QueryParser(
         proximityQ,
         rangeQuery,
         fuzzyT,
-        prefixT,
         minimumMatchQ(r),
         boostQ(r),
-        termQ,
+        termAndWildCardQ,
         regexQ,
         phraseQ,
         groupQ(r),
@@ -192,7 +191,7 @@ private object Parser {
   }
 
   private val baseRange = (0x20.toChar to 0x10ffff.toChar).toSet
-  private val special = Set('\\', ':', '^', '(', ')', '"', '“', '”', ' ', '*', '~')
+  private val special = Set('\\', ':', '^', '(', ')', '"', '“', '”', ' ', '*', '?', '~')
   private val allowed: P[Char] =
     // From cats.parse.strings.Json nonEscaped handling
     P.charIn(baseRange -- special)
@@ -201,11 +200,6 @@ private object Parser {
   val queryEnd = (wsp | P.end | P.char(')')).peek
 
   val term: P[String] = P.not(P.stringIn(reserved)).with1 *> allowed.rep.string
-
-  /** Parse a term query
-    * e.g. 'cat', 'catch22'
-    */
-  val termQ: P[Term] = term.map(Term.apply)
 
   val phrase: P[String] = (maybeSpace.with1 *> term <* maybeSpace).rep.string.surroundedBy(dquote)
 
@@ -232,12 +226,19 @@ private object Parser {
     Fuzzy(q, n)
   }
 
-  /** Parse a prefix term query
-    * e.g. 'jump*'
+  /** Parse term queries, prefix queries, and wildcards
+    * e.g. 'cat', 'catch22', 'catch*', 'c?tch'
     */
-  val prefixT: P[Prefix] =
-    (term.soft <* P.char('*'))
-      .map(Prefix.apply)
+  val termAndWildCardQ: P[Query] = {
+    val single = P.char('?').as(WildCardOp.SingleChar)
+    val many = P.char('*').as(WildCardOp.ManyChar)
+    val str = term.map(s => WildCardOp.Str(s))
+    (single | many | str).rep.map {
+      case NonEmptyList(WildCardOp.Str(term), Nil) => Term(term)
+      case NonEmptyList(WildCardOp.Str(prfx), WildCardOp.ManyChar :: Nil) => Prefix(prfx)
+      case termOps => WildCard(termOps)
+    }
+  }
 
   private val regex: P[String] = {
     val notEscape = P.charIn(baseRange - '\\' - '/').void
