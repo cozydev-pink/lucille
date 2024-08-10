@@ -122,7 +122,34 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
     val str = QueryPrinter.print(q)
     assertEquals(str, "msg:(hello hi)@2")
   }
+}
 
+class QueryPrinterWildCardSuite extends munit.FunSuite {
+
+  test("prints Wildcard query leading many") {
+    val q = WildCard(NonEmptyList.of(WildCardOp.ManyChar, WildCardOp.Str("tail")))
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "*tail")
+  }
+
+  test("prints Wildcard query leading single") {
+    val q = WildCard(NonEmptyList.of(WildCardOp.SingleChar, WildCardOp.Str("tail")))
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "?tail")
+  }
+
+  test("prints Wildcard mix ops") {
+    val q = WildCard(
+      NonEmptyList.of(
+        WildCardOp.Str("head"),
+        WildCardOp.SingleChar,
+        WildCardOp.Str("tail"),
+        WildCardOp.ManyChar,
+      )
+    )
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "head?tail*")
+  }
 }
 
 class QueryPrinterSimpleQueryTermSuite extends munit.FunSuite {
