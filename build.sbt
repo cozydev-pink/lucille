@@ -26,7 +26,7 @@ ThisBuild / tlJdkRelease := Some(8)
 
 val Scala212 = "2.12.20"
 val Scala213 = "2.13.14"
-ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, "3.3.3")
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, "3.3.4")
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 lazy val root = tlCrossRootProject.aggregate(core, benchmarks)
