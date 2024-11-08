@@ -150,6 +150,12 @@ class QueryPrinterWildCardSuite extends munit.FunSuite {
     val str = QueryPrinter.print(q)
     assertEquals(str, "head?tail*")
   }
+
+  test("prints Wildcard query simple string as term query") {
+    val q = WildCard(NonEmptyList.of(WildCardOp.Str("simple")))
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "simple")
+  }
 }
 
 class QueryPrinterSimpleQueryTermSuite extends munit.FunSuite {
