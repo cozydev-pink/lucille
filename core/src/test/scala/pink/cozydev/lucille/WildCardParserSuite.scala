@@ -45,6 +45,26 @@ class WildCardParserSuite extends munit.FunSuite {
     assertEquals(r, Right(WildCard(NonEmptyList.of(ManyChar, Str("cat")))))
   }
 
+  test("leading single char, trailing single char") {
+    val r = parseQ("?cat?")
+    assertEquals(r, Right(WildCard(NonEmptyList.of(SingleChar, Str("cat"), SingleChar))))
+  }
+
+  test("leading single char, trailing many char") {
+    val r = parseQ("?cat*")
+    assertEquals(r, Right(WildCard(NonEmptyList.of(SingleChar, Str("cat"), ManyChar))))
+  }
+
+  test("leading many char, trailing single char") {
+    val r = parseQ("*cat?")
+    assertEquals(r, Right(WildCard(NonEmptyList.of(ManyChar, Str("cat"), SingleChar))))
+  }
+
+  test("leading many char, trailing many char") {
+    val r = parseQ("*cat*")
+    assertEquals(r, Right(WildCard(NonEmptyList.of(ManyChar, Str("cat"), ManyChar))))
+  }
+
   test("middle many char") {
     val r = parseQ("cat*tail")
     assertEquals(r, Right(WildCard(NonEmptyList.of(Str("cat"), ManyChar, Str("tail")))))
