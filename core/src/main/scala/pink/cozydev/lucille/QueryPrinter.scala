@@ -107,7 +107,19 @@ object QueryPrinter {
           sb.append(" TO ")
           sb.append(q.upper.getOrElse("*"))
           if (q.upperInc) sb.append('}') else sb.append(']')
+        case q: WildCard =>
+          printWildCard(q)
       }
+
+    def printWildCard(q: WildCard): Unit = {
+      def printOp(op: WildCardOp): Unit =
+        op match {
+          case WildCardOp.SingleChar => sb.append('?')
+          case WildCardOp.ManyChar => sb.append('*')
+          case WildCardOp.Str(str) => sb.append(str)
+        }
+      q.ops.iterator.foreach(printOp)
+    }
 
     def printEachNel(nel: NonEmptyList[Query], sep: String): Unit = {
       printQ(nel.head)

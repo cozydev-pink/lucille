@@ -218,6 +218,15 @@ object Query {
       Field(field, q.mapLastTerm(f))
   }
 
+  sealed trait WildCardOp extends Product with Serializable
+  object WildCardOp {
+    case object SingleChar extends WildCardOp
+    case object ManyChar extends WildCardOp
+    case class Str(str: String) extends WildCardOp
+  }
+
+  final case class WildCard(ops: NonEmptyList[WildCardOp]) extends TermQuery
+
   private def rewriteLastTerm(
       qs: NonEmptyList[Query],
       f: Query.Term => Query,
