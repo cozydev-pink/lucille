@@ -191,7 +191,10 @@ private object Parser {
   }
 
   private val baseRange = (0x20.toChar to 0x10ffff.toChar).toSet
-  private val special = Set('\\', ':', '^', '(', ')', '"', '“', '”', ' ', '*', '?', '~')
+  val luceneSpecial =
+    Set('+', '-', '!', '(', ')', '{', '}', '[', ']', '^', '"', '~', '*', '?', ':', '\\', '/')
+  private val special = Set('“', '”', ' ') ++ luceneSpecial
+  private val escapedTokens = P.char('\\') *> P.charIn(special)
   private val allowed: P[Char] =
     // From cats.parse.strings.Json nonEscaped handling
     P.charIn(baseRange -- special)
@@ -199,9 +202,15 @@ private object Parser {
 
   val queryEnd = (wsp | P.end | P.char(')')).peek
 
-  val term: P[String] = P.not(P.stringIn(reserved)).with1 *> allowed.rep.string
+  // We use repAs[String] to escape the slashes
+  val term: P[String] =
+    P.not(P.stringIn(reserved)).with1 *> allowed.orElse(escapedTokens).repAs[String]
 
-  val phrase: P[String] = (maybeSpace.with1 *> term <* maybeSpace).rep.string.surroundedBy(dquote)
+  private val quotes = Set('"', '“', '”')
+
+  private val phraseTerm = P.charIn(baseRange -- quotes).repAs[String]
+
+  val phrase: P[String] = phraseTerm.surroundedBy(P.charIn(quotes))
 
   /** Parse a phrase query
     * e.g. 'the cat jumped'
