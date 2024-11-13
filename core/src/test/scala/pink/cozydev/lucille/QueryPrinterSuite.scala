@@ -227,3 +227,29 @@ class QueryPrinterSimpleQueryTermSuite extends munit.FunSuite {
   }
 
 }
+
+class QueryPrinterEscapedTermSuite extends munit.FunSuite {
+  def assertRoundTripParsePrint(s: String)(implicit loc: munit.Location) = {
+    val parseQ = QueryParser.parse(s)
+    val printQ = parseQ.map(QueryPrinter.print(_))
+    assertEquals(printQ, Right(s), s"parseQ: $parseQ, printQ: $printQ")
+  }
+
+  test("prints escaped term") {
+    val q = Term("cat:dog")
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "cat\\:dog")
+  }
+
+  test("prints escaped another term") {
+    val q = Term("(1+1):2")
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "\\(1\\+1\\)\\:2")
+  }
+
+  test("round trips Phrases") {
+    assertRoundTripParsePrint("\"cats-effect\"")
+    assertRoundTripParsePrint("\"cats:effect\"")
+    assertRoundTripParsePrint("title:(cats\\-effect OR cats\\:effect)")
+  }
+}

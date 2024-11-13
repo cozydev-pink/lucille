@@ -18,6 +18,7 @@ package pink.cozydev.lucille
 
 import pink.cozydev.lucille.Query._
 import cats.data.NonEmptyList
+import pink.cozydev.lucille.Parser.luceneSpecial
 
 object QueryPrinter {
 
@@ -83,7 +84,7 @@ object QueryPrinter {
 
     def strTermQuery(q: TermQuery): Unit =
       q match {
-        case q: Term => sb.append(q.str)
+        case q: Term => escapeStr(q.str)
         case q: Phrase =>
           sb.append('"')
           sb.append(q.str)
@@ -128,6 +129,12 @@ object QueryPrinter {
         printQ(q)
       }
     }
+
+    def escapeStr(str: String): Unit =
+      str.foreach { c =>
+        if (luceneSpecial.contains(c)) sb.append('\\')
+        sb.append(c)
+      }
 
     printQ(query)
     sb.result()
