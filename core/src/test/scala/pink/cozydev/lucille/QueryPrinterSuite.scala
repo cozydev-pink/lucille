@@ -108,7 +108,7 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
   test("prints Boost query with other queries included") {
     val q = Or(
       Boost(
-        Or(Field("fieldA", Group(Or(Or(Term("a"), Term("b")), Not(Term("c")))))),
+        Field("fieldA", Group(Or(Or(Term("a"), Term("b")), Not(Term("c"))))),
         2.50f,
       ),
       Field("fieldB", Term("d")),

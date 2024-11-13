@@ -354,6 +354,22 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     )
   }
 
+  test("the cat AND ocean AND ocean2 OR fish") {
+    val r = parseQ("the cat AND ocean AND ocean2 OR fish")
+    assertEquals(
+      r,
+      Right(
+        Or(
+          Term("the"),
+          Or(
+            And(Term("cat"), Term("ocean"), Term("ocean2")),
+            Term("fish"),
+          ),
+        )
+      ),
+    )
+  }
+
   test("parse NOT query") {
     val r = parseQ("NOT derp")
     assertEquals(
@@ -389,7 +405,7 @@ class GroupQuerySuite extends munit.FunSuite {
     )
   }
 
-  test("parse multiple terms with trailing spaces in a group".fail) {
+  test("parse multiple terms with trailing spaces in a group") {
     val r = parseQ("(The cat   jumped   )")
     assertEquals(
       r,

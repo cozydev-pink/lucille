@@ -117,13 +117,13 @@ object Query {
     *
     * @param qs the queries to union
     */
-  final case class Or(qs: NonEmptyList[Query]) extends Query {
+  final case class Or private (qs: NonEmptyList[Query]) extends Query {
     def mapLastTerm(f: Query.Term => Query): Or =
       Or(rewriteLastTerm(qs, f))
   }
   object Or {
-    def apply(head: Query, tail: Query*): Or =
-      Or(NonEmptyList(head, tail.toList))
+    def apply(left: Query, right: Query, tail: Query*): Or =
+      Or(NonEmptyList(left, right :: tail.toList))
   }
 
   /**  An And operator
@@ -132,13 +132,13 @@ object Query {
     *
     * @param qs the queries to intersect
     */
-  final case class And(qs: NonEmptyList[Query]) extends Query {
+  final case class And private (qs: NonEmptyList[Query]) extends Query {
     def mapLastTerm(f: Query.Term => Query): And =
       And(rewriteLastTerm(qs, f))
   }
   object And {
-    def apply(head: Query, tail: Query*): And =
-      And(NonEmptyList(head, tail.toList))
+    def apply(left: Query, right: Query, tail: Query*): And =
+      And(NonEmptyList(left, right :: tail.toList))
   }
 
   /** A Not operator

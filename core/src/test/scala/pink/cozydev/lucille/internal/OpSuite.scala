@@ -21,101 +21,63 @@ import Op._
 
 class AssociateOpsSuite extends munit.FunSuite {
 
-  test("associates ORs") {
-    val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
-    val opQs = List((OR, Term("dog")))
-    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
-    val expected = NonEmptyList.of(Term("the"), Or(Term("cat"), Term("dog")))
+  test("associates with one AND-Query pair") {
+    val opQs = List((AND, Term("dogs")))
+    val result = associateOps(Term("cats"), opQs)
+    val expected = And(Term("cats"), Term("dogs"))
     assertEquals(result, expected)
   }
 
-  test("associates ANDs") {
-    val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
-    val opQs = List((AND, Term("dog")))
-    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
-    val expected = NonEmptyList.of(Term("the"), And(Term("cat"), Term("dog")))
+  test("associates with two AND-Query pairs") {
+    val opQs = List((AND, Term("dogs")), (AND, Term("fish")))
+    val result = associateOps(Term("cats"), opQs)
+    val expected = And(Term("cats"), Term("dogs"), Term("fish"))
     assertEquals(result, expected)
   }
 
-  test("associates multiple ORs") {
-    val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
-    val opQs = List((OR, Term("dog")), (OR, Term("fish")))
-    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
-    val expected =
-      NonEmptyList.of(Term("the"), Or(Term("cat"), Term("dog"), Term("fish")))
+  test("associates with one OR-Query pair") {
+    val opQs = List((OR, Term("dogs")))
+    val result = associateOps(Term("cats"), opQs)
+    val expected = Or(Term("cats"), Term("dogs"))
     assertEquals(result, expected)
   }
 
-  test("associates multiple ANDs") {
-    val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
-    val opQs = List((AND, Term("dog")), (AND, Term("fish")))
-    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
-    val expected =
-      NonEmptyList.of(
-        Term("the"),
-        And(Term("cat"), Term("dog"), Term("fish")),
-      )
-    assertEquals(result, expected)
-  }
-
-  test("associates with OR and then AND") {
-    // the cat OR ocean AND fish
-    // default:the default:cat +default:ocean +default:fish
-    val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
-    val opQs = List((OR, Term("ocean")), (AND, Term("fish")))
-    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
-    val expected =
-      NonEmptyList.of(
-        Term("the"),
-        Term("cat"),
-        And(Term("ocean"), Term("fish")),
-      )
-    assertEquals(result, expected)
-  }
-
-  test("associates with AND and then OR") {
-    // the cat AND ocean OR fish
-    // default:the +default:cat +default:ocean default:fish
-    val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
-    val opQs = List((AND, Term("ocean")), (OR, Term("fish")))
-    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
-    val expected =
-      NonEmptyList.of(
-        Term("the"),
-        And(Term("cat"), Term("ocean")),
-        Or(Term("fish")),
-      )
-    assertEquals(result, expected)
-  }
-
-  test("associates with two ORs and then AND") {
-    // the cat OR ocean OR ocean2 AND fish
-    // default:the default:cat default:ocean +default:ocean2 +default:fish
-    val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
-    val opQs = List((OR, Term("ocean")), (OR, Term("ocean2")), (AND, Term("fish")))
-    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
-    val expected =
-      NonEmptyList.of(
-        Term("the"),
-        Term("cat"),
-        Term("ocean"),
-        And(Term("ocean2"), Term("fish")),
-      )
+  test("associates with two OR-Query pairs") {
+    val opQs = List((OR, Term("dogs")), (OR, Term("fish")))
+    val result = associateOps(Term("cats"), opQs)
+    val expected = Or(Term("cats"), Term("dogs"), Term("fish"))
     assertEquals(result, expected)
   }
 
   test("associates with two ANDs and then OR") {
-    // the cat AND ocean AND ocean2 OR fish
-    // default:the +default:cat +default:ocean +default:ocean2 default:fish
-    val leftQs = NonEmptyList.of(Term("the"), Term("cat"))
     val opQs = List((AND, Term("ocean")), (AND, Term("ocean2")), (OR, Term("fish")))
-    val result = associateOps(leftQs, opQs, defaultBooleanOR = true)
-    val expected =
-      NonEmptyList.of(
-        Term("the"),
-        And(Term("cat"), Term("ocean"), Term("ocean2")),
-        Or(Term("fish")),
-      )
+    val result = associateOps(Term("cat"), opQs)
+    val expected = Or(And(Term("cat"), Term("ocean"), Term("ocean2")), Term("fish"))
+    assertEquals(result, expected)
+  }
+
+  test("associates with two ORs and then AND") {
+    val opQs = List((OR, Term("ocean")), (OR, Term("ocean2")), (AND, Term("fish")))
+    val result = associateOps(Term("cat"), opQs)
+    val expected = Or(Term("cat"), Term("ocean"), And(Term("ocean2"), Term("fish")))
+    assertEquals(result, expected)
+  }
+
+  test("associates with one AND-island") {
+    val opQs =
+      List((OR, Term("ocean")), (OR, Term("coast")), (AND, Term("island")), (OR, Term("ocean")))
+    val result = associateOps(Term("cat"), opQs)
+    val expected = Or(Term("cat"), Term("ocean"), And(Term("coast"), Term("island")), Term("ocean"))
+    assertEquals(result, expected)
+  }
+
+  test("associates with two AND-islands") {
+    val opQs =
+      List((OR, Term("ocean")), (OR, Term("coast")), (AND, Term("island")), (OR, Term("ocean")))
+    val double = opQs ++ opQs
+    val result = associateOps(Term("cat"), double)
+    val oceanQs = List(Term("ocean"), And(Term("coast"), Term("island")), Term("ocean"))
+    val expected = Or(NonEmptyList(Term("cat"), oceanQs ++ oceanQs))
     assertEquals(result, expected)
   }
 }

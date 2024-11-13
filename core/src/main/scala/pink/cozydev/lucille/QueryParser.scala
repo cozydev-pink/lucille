@@ -23,6 +23,7 @@ import cats.data.NonEmptyList
 import cats.parse.Parser0
 import cats.syntax.all._
 import internal.Op
+import cats.data.{Chain, NonEmptyChain}
 
 class QueryParser(
     defaultBooleanOR: Boolean
@@ -78,15 +79,26 @@ class QueryParser(
     * e.g. 'q0 q1 OR q2 q3'.
     * Parsing repeats so that we can parse q3, the first iteration only gets 'q0 q1 OR q2'
     */
-  private def nelQueries(query: P[Query]): P[NonEmptyList[Query]] =
-    (maybeSpace.with1 *> qWithSuffixOps(query)).repUntil(maybeSpace ~ P.end).map(_.flatten)
-
-  /** Parse simple queries followed by suffix op queries
-    * e.g. 'q0 q1 OR q2'
-    */
-  private def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
-    (query.repSep(sp.rep) ~ suffixOps(query))
-      .map { case (h, t) => internal.Op.associateOps(h, t, defaultBooleanOR) }
+  def nelQueries(query: P[Query]): P[NonEmptyList[Query]] = {
+    // Get all leading queries 'q0 q1'
+    val qsAndLast = (query <* maybeSpace).repAs(min = 1)(Op.allButLastAccumulator0)
+    val combined: P[NonEmptyChain[Query]] =
+      // lead queries, plus the chain of OP-Query pairs, 'q0 q1 OR q2'
+      (maybeSpace.with1 *> (qsAndLast ~ suffixOps(query))).map {
+        // Only one query
+        case ((Nil, last), Nil) => NonEmptyChain(last)
+        // A few queries, no trailing explicit Ops
+        case ((qs, last), Nil) => Chain.fromSeq(qs) ++: NonEmptyChain(last)
+        // One query and then Ops, associate
+        case ((Nil, last), opsAndQs) => NonEmptyChain(Op.associateOps(last, opsAndQs))
+        // A few queries and then Ops, queries and then associated ops
+        case ((qs, last), opsAndQs) =>
+          Chain.fromSeq(qs) ++: NonEmptyChain(Op.associateOps(last, opsAndQs))
+      }
+    // TODO probably a more efficient way to do this....
+    // Repeat to get "trailing" queries as leading queries in a new pass
+    combined.repUntil(maybeSpace ~ P.end).map(ns => ns.reduce.toNonEmptyList)
+  }
 
   /** Parse a suffix op query
     * e.g. 'OR term1 OR term2$' parses completely
