@@ -251,5 +251,7 @@ class QueryPrinterEscapedTermSuite extends munit.FunSuite {
     assertRoundTripParsePrint("\"cats-effect\"")
     assertRoundTripParsePrint("\"cats:effect\"")
     assertRoundTripParsePrint("title:(cats\\-effect OR cats\\:effect)")
+    assertRoundTripParsePrint("\"the cat said \\\"meow\\\" loudly\"")
+    assertRoundTripParsePrint("\"This is a blackslash: \\\\, wow!\"")
   }
 }

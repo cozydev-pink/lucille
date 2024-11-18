@@ -47,4 +47,14 @@ class PunctuationSuite extends munit.FunSuite {
     assertEquals(r, Right(Field("name", Phrase("cats-effect"))))
   }
 
+  test("parse phrase query with quotes") {
+    val r = parseQ("\"the cat said \\\"meow\\\" loudly\"")
+    assertEquals(r, Right(Phrase("""the cat said "meow" loudly""")))
+  }
+
+  test("parse phrase query with backslash") {
+    val r = parseQ("\"This is a blackslash: \\\\, wow!\"")
+    assertEquals(r, Right(Phrase("""This is a blackslash: \, wow!""")))
+  }
+
 }
