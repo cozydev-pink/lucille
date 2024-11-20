@@ -34,8 +34,10 @@ class AssociativitySuite extends munit.FunSuite {
     }
   }
 
-  val checkWithDefaultOr = check(QueryParser.default, "default OR :")
-  val checkWithDefaultAnd = check(QueryParser.withDefaultOperatorAND, "default And:")
+  val checkWithDefaultOr: (TestOptions, Query) => Unit =
+    check(QueryParser.default, "default OR :")
+  val checkWithDefaultAnd: (TestOptions, Query) => Unit =
+    check(QueryParser.withDefaultOperatorAND, "default And:")
 
   checkWithDefaultOr(
     "a b AND c",
