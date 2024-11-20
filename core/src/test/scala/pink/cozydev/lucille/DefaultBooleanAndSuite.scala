@@ -53,4 +53,28 @@ class DefaultBooleanAndSuite extends munit.FunSuite {
     assertEquals(actual, Right(expected))
   }
 
+  test("DefaultBooleanAnd parse complex mix of AND and OR queries with trailing terms") {
+    val actual = parseQ("derp AND lerp slerp orA OR orB last")
+    val expected =
+      And(
+        And(Term("derp"), Term("lerp")),
+        Term("slerp"),
+        Or(Term("orA"), Term("orB")),
+        Term("last"),
+      )
+    assertEquals(actual, Right(expected))
+  }
+
+  test("DefaultBooleanAnd parse complex mix of OR and AND queries with trailing terms") {
+    val actual = parseQ("derp OR lerp slerp andA AND andB last")
+    val expected =
+      And(
+        Or(Term("derp"), Term("lerp")),
+        Term("slerp"),
+        And(Term("andA"), Term("andB")),
+        Term("last"),
+      )
+    assertEquals(actual, Right(expected))
+  }
+
 }

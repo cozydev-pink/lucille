@@ -354,6 +354,21 @@ class QueryWithSuffixOpsSuite extends munit.FunSuite {
     )
   }
 
+  test("parse complex mix of OR and AND queries with trailing terms") {
+    val r = parseQ("derp OR lerp slerp andA AND andB last")
+    assertEquals(
+      r,
+      Right(
+        Or(
+          Or(Term("derp"), Term("lerp")),
+          Term("slerp"),
+          And(Term("andA"), Term("andB")),
+          Term("last"),
+        )
+      ),
+    )
+  }
+
   test("the cat AND ocean AND ocean2 OR fish") {
     val r = parseQ("the cat AND ocean AND ocean2 OR fish")
     assertEquals(
