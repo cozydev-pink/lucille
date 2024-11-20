@@ -17,6 +17,7 @@
 package pink.cozydev.lucille
 
 import cats.data.NonEmptyList
+import scala.collection.mutable.ListBuffer
 
 /** A trait for all queries */
 sealed trait Query extends Product with Serializable {
@@ -117,16 +118,26 @@ object Query {
     *
     * @param qs the queries to union
     */
-  final case class Or private (qs: NonEmptyList[Query]) extends Query {
+  final case class Or private (allButLast: NonEmptyList[Query], last: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): Or =
-      Or(rewriteLastTerm(qs, f))
+      this.copy(last = last.mapLastTerm(f))
   }
   object Or {
-    def apply(left: Query, right: Query, tail: Query*): Or =
-      Or(NonEmptyList(left, right :: tail.toList))
+    def apply(left: Query, right: Query, tail: Query*): Or = {
+      val bldr = ListBuffer.empty[Query]
+      bldr.sizeHint(2 + tail.size)
+      var last = right
+      tail.foreach { q => bldr += last; last = q }
+      Or(NonEmptyList(left, bldr.result()), last)
+    }
 
-    def apply(left: Query, right: Query, tail: List[Query]): Or =
-      Or(NonEmptyList(left, right :: tail))
+    def apply(left: Query, right: Query, tail: List[Query]): Or = {
+      val bldr = ListBuffer.empty[Query]
+      bldr.sizeHint(2 + tail.size)
+      var last = right
+      tail.foreach { q => bldr += last; last = q }
+      Or(NonEmptyList(left, bldr.result()), last)
+    }
 
     def fromListUnsafe(queries: List[Query]): Or =
       queries match {
@@ -134,7 +145,7 @@ object Query {
           throw new IllegalArgumentException("Cannot create Or query from empty list")
         case _ :: Nil =>
           throw new IllegalArgumentException("Cannot create Or query from single element list")
-        case h :: t => Or(NonEmptyList(h, t))
+        case l :: r :: tail => Or.apply(l, r, tail)
       }
   }
 
@@ -144,16 +155,26 @@ object Query {
     *
     * @param qs the queries to intersect
     */
-  final case class And private (qs: NonEmptyList[Query]) extends Query {
+  final case class And private (allButLast: NonEmptyList[Query], last: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): And =
-      And(rewriteLastTerm(qs, f))
+      this.copy(last = last.mapLastTerm(f))
   }
   object And {
-    def apply(left: Query, right: Query, tail: Query*): And =
-      And(NonEmptyList(left, right :: tail.toList))
+    def apply(left: Query, right: Query, tail: Query*): And = {
+      val bldr = ListBuffer.empty[Query]
+      bldr.sizeHint(2 + tail.size)
+      var last = right
+      tail.foreach { q => bldr += last; last = q }
+      And(NonEmptyList(left, bldr.result()), last)
+    }
 
-    def apply(left: Query, right: Query, tail: List[Query]): And =
-      And(NonEmptyList(left, right :: tail))
+    def apply(left: Query, right: Query, tail: List[Query]): And = {
+      val bldr = ListBuffer.empty[Query]
+      bldr.sizeHint(2 + tail.size)
+      var last = right
+      tail.foreach { q => bldr += last; last = q }
+      And(NonEmptyList(left, bldr.result()), last)
+    }
 
     def fromListUnsafe(queries: List[Query]): And =
       queries match {
@@ -161,7 +182,7 @@ object Query {
           throw new IllegalArgumentException("Cannot create And query from empty list")
         case _ :: Nil =>
           throw new IllegalArgumentException("Cannot create And query from single element list")
-        case h :: t => And(NonEmptyList(h, t))
+        case l :: r :: tail => And.apply(l, r, tail)
       }
   }
 
@@ -251,13 +272,4 @@ object Query {
 
   final case class WildCard(ops: NonEmptyList[WildCardOp]) extends TermQuery
 
-  private def rewriteLastTerm(
-      qs: NonEmptyList[Query],
-      f: Query.Term => Query,
-  ): NonEmptyList[Query] =
-    if (qs.size == 1) NonEmptyList.one(qs.head.mapLastTerm(f))
-    else {
-      val newT = qs.tail.init :+ qs.last.mapLastTerm(f)
-      NonEmptyList(qs.head, newT)
-    }
 }
