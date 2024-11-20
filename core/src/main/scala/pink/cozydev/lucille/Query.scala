@@ -124,6 +124,18 @@ object Query {
   object Or {
     def apply(left: Query, right: Query, tail: Query*): Or =
       Or(NonEmptyList(left, right :: tail.toList))
+
+    def apply(left: Query, right: Query, tail: List[Query]): Or =
+      Or(NonEmptyList(left, right :: tail))
+
+    def fromListUnsafe(queries: List[Query]): Or =
+      queries match {
+        case Nil =>
+          throw new IllegalArgumentException("Cannot create Or query from empty list")
+        case _ :: Nil =>
+          throw new IllegalArgumentException("Cannot create Or query from single element list")
+        case h :: t => Or(NonEmptyList(h, t))
+      }
   }
 
   /**  An And operator
@@ -139,6 +151,18 @@ object Query {
   object And {
     def apply(left: Query, right: Query, tail: Query*): And =
       And(NonEmptyList(left, right :: tail.toList))
+
+    def apply(left: Query, right: Query, tail: List[Query]): And =
+      And(NonEmptyList(left, right :: tail))
+
+    def fromListUnsafe(queries: List[Query]): And =
+      queries match {
+        case Nil =>
+          throw new IllegalArgumentException("Cannot create And query from empty list")
+        case _ :: Nil =>
+          throw new IllegalArgumentException("Cannot create And query from single element list")
+        case h :: t => And(NonEmptyList(h, t))
+      }
   }
 
   /** A Not operator

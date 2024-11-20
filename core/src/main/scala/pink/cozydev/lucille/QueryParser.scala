@@ -124,9 +124,9 @@ class QueryParser(
     */
   private def wrappedQueries(query: P[Query]): P[Query] =
     nelQueries(query).map {
-      case NonEmptyList(singleQ, Nil) => singleQ
-      case multipleQs =>
-        if (defaultBooleanOR) Or.apply(multipleQs) else And.apply(multipleQs)
+      case NonEmptyList(left, Nil) => left
+      case NonEmptyList(left, right :: tail) =>
+        if (defaultBooleanOR) Or(left, right, tail) else And(left, right, tail)
     }
 
   /** Recursively parse compound queries

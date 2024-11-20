@@ -16,7 +16,6 @@
 
 package pink.cozydev.lucille.internal
 
-import cats.data.NonEmptyList
 import pink.cozydev.lucille.Query
 import cats.parse.Accumulator
 import cats.parse.Appender
@@ -91,7 +90,8 @@ private[lucille] object Op {
                 tempAccumulator += currentQ
                 val qs = tempAccumulator.result()
                 tempAccumulator.clear()
-                outerBlder += Query.And(NonEmptyList.fromListUnsafe(qs))
+
+                outerBlder += Query.And.fromListUnsafe(qs)
             }
           }
           // get ready for next iteration
@@ -108,14 +108,14 @@ private[lucille] object Op {
         currentOp match {
           case AND =>
             // Final OP was an AND, collapse into one AND query, add to outer
-            outerBlder += Query.And(NonEmptyList.fromListUnsafe(innerQs))
+            outerBlder += Query.And.fromListUnsafe(innerQs)
           case OR =>
             // Final OP was an OR, directly add to outer
             outerBlder ++= innerQs
         }
         val outerQs = outerBlder.result()
         // If we only have one query, directly return that, otherwise wrap in OR
-        if (outerQs.size == 1) outerQs.head else Query.Or(NonEmptyList.fromListUnsafe(outerQs))
+        if (outerQs.size == 1) outerQs.head else Query.Or.fromListUnsafe(outerQs)
     }
 
 }
