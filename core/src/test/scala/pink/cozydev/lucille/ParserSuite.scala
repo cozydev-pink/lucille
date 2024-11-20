@@ -15,7 +15,6 @@
  */
 
 package pink.cozydev.lucille
-import cats.data.NonEmptyList
 import Query._
 
 class SingleSimpleQuerySuite extends munit.FunSuite {
@@ -475,40 +474,13 @@ class GroupQuerySuite extends munit.FunSuite {
 
   test("parse nested group query with trailing term") {
     val r = parseQ("(title:test AND (pass OR fail)) extra")
-    val gq = And(
-      NonEmptyList.of(
-        Field("title", Term("test")),
-        Group(
-          Or(Term("pass"), Term("fail"))
-        ),
-      )
-    )
-    assertEquals(
-      r,
-      Right(
-        Or(Group(gq), Term("extra"))
-      ),
-    )
+    val gq = And(Field("title", Term("test")), Group(Or(Term("pass"), Term("fail"))))
+    assertEquals(r, Right(Or(Group(gq), Term("extra"))))
   }
 
   test("parse nested group query AND'd with a phrase query") {
     val r = parseQ("(title:test AND (pass OR fail)) AND \"extra phrase\"")
-    val gq = And(
-      NonEmptyList.of(
-        Field("title", Term("test")),
-        Group(
-          Or(Term("pass"), Term("fail"))
-        ),
-      )
-    )
-    assertEquals(
-      r,
-      Right(
-        And(
-          Group(gq),
-          Phrase("extra phrase"),
-        )
-      ),
-    )
+    val gq = And(Field("title", Term("test")), Group(Or(Term("pass"), Term("fail"))))
+    assertEquals(r, Right(And(Group(gq), Phrase("extra phrase"))))
   }
 }

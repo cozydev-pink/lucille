@@ -15,7 +15,6 @@
  */
 
 package pink.cozydev.lucille.internal
-import cats.data.NonEmptyList
 import pink.cozydev.lucille.Query._
 import Op._
 
@@ -77,7 +76,7 @@ class AssociateOpsSuite extends munit.FunSuite {
     val double = opQs ++ opQs
     val result = associateOps(Term("cat"), double)
     val oceanQs = List(Term("ocean"), And(Term("coast"), Term("island")), Term("ocean"))
-    val expected = Or(NonEmptyList(Term("cat"), oceanQs ++ oceanQs))
+    val expected = Or(Term("cat"), oceanQs.head, oceanQs.tail ++ oceanQs)
     assertEquals(result, expected)
   }
 }

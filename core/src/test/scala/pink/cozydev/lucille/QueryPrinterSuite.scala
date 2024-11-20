@@ -22,13 +22,13 @@ import cats.data.NonEmptyList
 class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
 
   test("prints OR query") {
-    val q = Or(NonEmptyList.of(Term("hello"), Term("hi")))
+    val q = Or(Term("hello"), Term("hi"))
     val str = QueryPrinter.print(q)
     assertEquals(str, "hello OR hi")
   }
 
   test("prints AND query") {
-    val q = And(NonEmptyList.of(Term("hello"), Term("hi")))
+    val q = And(Term("hello"), Term("hi"))
     val str = QueryPrinter.print(q)
     assertEquals(str, "hello AND hi")
   }
@@ -76,7 +76,7 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
   }
 
   test("prints Boost query") {
-    val q = Boost(Or(NonEmptyList.of(Term("hello"), Term("hi"))), 2.25f)
+    val q = Boost(Or(Term("hello"), Term("hi")), 2.25f)
     val str = QueryPrinter.print(q)
     assertEquals(str, "(hello OR hi)^2.25")
   }
@@ -88,13 +88,13 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
   }
 
   test("prints Boost query with precision zero") {
-    val q = Boost(Or(NonEmptyList.of(Term("hello"), Term("hi"))), 3.1f)
+    val q = Boost(Or(Term("hello"), Term("hi")), 3.1f)
     val str = QueryPrinter.print(q, 0)
     assertEquals(str, "(hello OR hi)^3")
   }
 
   test("prints Boost query with precision") {
-    val q = Boost(Or(NonEmptyList.of(Term("hello"), Term("hi"))), 3.1f)
+    val q = Boost(Or(Term("hello"), Term("hi")), 3.1f)
     val str = QueryPrinter.print(q, 1)
     assertEquals(str, "(hello OR hi)^3.1")
   }
