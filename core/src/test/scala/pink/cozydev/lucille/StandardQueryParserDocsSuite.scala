@@ -219,7 +219,7 @@ class StandardQueryParserDocsSuite extends munit.FunSuite {
     )
   }
 
-  test("""\:\(quoted\+term\)\:""".fail) {
+  test("""\:\(quoted\+term\)\:""") {
     val r = parseQ("""\:\(quoted\+term\)\:""")
     assert(r.isRight)
   }

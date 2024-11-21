@@ -191,17 +191,27 @@ private object Parser {
   }
 
   private val baseRange = (0x20.toChar to 0x10ffff.toChar).toSet
-  private val special = Set('\\', ':', '^', '(', ')', '"', '“', '”', ' ', '*', '?', '~')
-  private val allowed: P[Char] =
-    // From cats.parse.strings.Json nonEscaped handling
-    P.charIn(baseRange -- special)
+  private val quotes = Set('"', '“', '”')
+  val luceneSpecial =
+    Set('+', '-', '!', '(', ')', '{', '}', '[', ']', '^', '"', '~', '*', '?', ':', '\\', '/')
+  private val special = luceneSpecial ++ quotes + ' '
+  val escapedTokensPhraseSet = quotes + '\\'
+  private val escapedTokens = P.char('\\') *> P.charIn(special)
+  // From cats.parse.strings.Json nonEscaped handling
+  private val allowed: P[Char] = P.charIn(baseRange -- special)
   val reserved = Set("OR", "||", "AND", "&&", "NOT", "+", "-", "/")
 
   val queryEnd = (wsp | P.end | P.char(')')).peek
 
-  val term: P[String] = P.not(P.stringIn(reserved)).with1 *> allowed.rep.string
+  // We use repAs[String] to avoid capturing the literal escape slash characters
+  val term: P[String] =
+    P.not(P.stringIn(reserved)).with1 *> allowed.orElse(escapedTokens).repAs[String]
 
-  val phrase: P[String] = (maybeSpace.with1 *> term <* maybeSpace).rep.string.surroundedBy(dquote)
+  private val phraseEscapeToken = P.char('\\') *> P.charIn(escapedTokensPhraseSet)
+  private val phraseTerm =
+    P.charIn(baseRange -- escapedTokensPhraseSet).orElse(phraseEscapeToken).repAs[String]
+
+  val phrase: P[String] = phraseTerm.surroundedBy(P.charIn(quotes))
 
   /** Parse a phrase query
     * e.g. 'the cat jumped'

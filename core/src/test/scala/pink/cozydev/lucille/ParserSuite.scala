@@ -155,6 +155,16 @@ class SingleSimpleQuerySuite extends munit.FunSuite {
     assert(r.isLeft)
   }
 
+  test("parse escaped characters simple") {
+    val r = parseQ("cat\\:dog")
+    assertSingleTerm(r, Term("cat:dog"))
+  }
+
+  test("parse escaped characters complex") {
+    val r = parseQ("\\(1\\+1\\)\\:2")
+    assertSingleTerm(r, Term("(1+1):2"))
+  }
+
 }
 
 class MultiSimpleQuerySuite extends munit.FunSuite {
