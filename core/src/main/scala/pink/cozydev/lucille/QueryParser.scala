@@ -16,20 +16,20 @@
 
 package pink.cozydev.lucille
 
+import cats.parse.{Accumulator, Appender, Parser0}
 import cats.parse.{Parser => P}
-import cats.parse.Rfc5234.{sp, alpha, digit, wsp}
 import cats.parse.Parser.{char => pchar}
-import cats.data.NonEmptyList
-import cats.parse.Parser0
+import cats.parse.Rfc5234.{sp, alpha, digit, wsp}
+import cats.data.{Chain, NonEmptyChain, NonEmptyList}
 import cats.syntax.all._
+
 import internal.Op
-import cats.data.{Chain, NonEmptyChain}
 
 class QueryParser(
     defaultBooleanOR: Boolean
 ) {
   import Query._
-  import Parser._
+  import QueryParserHelpers._
 
   /** Parse a not query
     * e.g. 'animals NOT (cats AND dogs)'
@@ -81,7 +81,7 @@ class QueryParser(
     */
   def nelQueries(query: P[Query]): P[NonEmptyList[Query]] = {
     // Get all leading queries 'q0 q1'
-    val qsAndLast = (query <* maybeSpace).repAs(min = 1)(Op.allButLastAccumulator0)
+    val qsAndLast = (query <* maybeSpace).repAs(min = 1)(allButLastAccumulator0)
     val combined: P[NonEmptyChain[Query]] =
       // lead queries, plus the chain of OP-Query pairs, 'q0 q1 OR q2'
       (maybeSpace.with1 *> (qsAndLast ~ suffixOps(query))).map {
@@ -182,7 +182,7 @@ object QueryParser {
 
 }
 
-private object Parser {
+private object QueryParserHelpers {
   import Query._
 
   val dquote = P.charIn(Set('"', '“', '”'))
@@ -282,4 +282,20 @@ private object Parser {
   val or = (P.string("OR") | P.string("||")).as(internal.Op.OR)
   val and = (P.string("AND") | P.string("&&")).as(internal.Op.AND)
   val infixOp = (or | and).withContext("infixOp")
+
+  implicit def allButLastAccumulator0[A]: Accumulator[A, (List[A], A)] =
+    new Accumulator[A, (List[A], A)] {
+      def newAppender(first: A): Appender[A, (List[A], A)] =
+        new Appender[A, (List[A], A)] {
+          var last = first
+          val bldr = List.newBuilder[A]
+          def append(item: A) = {
+            bldr += last
+            last = item
+            this
+          }
+
+          def finish() = (bldr.result(), last)
+        }
+    }
 }

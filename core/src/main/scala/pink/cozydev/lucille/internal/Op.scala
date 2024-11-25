@@ -17,8 +17,6 @@
 package pink.cozydev.lucille.internal
 
 import pink.cozydev.lucille.Query
-import cats.parse.Accumulator
-import cats.parse.Appender
 import scala.collection.mutable.ListBuffer
 
 private[lucille] sealed trait Op extends Product with Serializable
@@ -26,22 +24,6 @@ private[lucille] sealed trait Op extends Product with Serializable
 private[lucille] object Op {
   case object OR extends Op
   case object AND extends Op
-
-  implicit def allButLastAccumulator0[A]: Accumulator[A, (List[A], A)] =
-    new Accumulator[A, (List[A], A)] {
-      def newAppender(first: A): Appender[A, (List[A], A)] =
-        new Appender[A, (List[A], A)] {
-          var last = first
-          val bldr = List.newBuilder[A]
-          def append(item: A) = {
-            bldr += last
-            last = item
-            this
-          }
-
-          def finish() = (bldr.result(), last)
-        }
-    }
 
   /** Associates a starting query and a list of OP-Query pairs.
     *
