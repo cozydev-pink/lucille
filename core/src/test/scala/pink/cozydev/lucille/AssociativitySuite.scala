@@ -36,8 +36,54 @@ class AssociativitySuite extends munit.FunSuite {
 
   val checkWithDefaultOr: (TestOptions, Query) => Unit =
     check(QueryParser.default, "default OR :")
+
   val checkWithDefaultAnd: (TestOptions, Query) => Unit =
     check(QueryParser.withDefaultOperatorAND, "default And:")
+
+  checkWithDefaultOr(
+    "NOT a AND b",
+    And(Not(Term("a")), Term("b")),
+  )
+  checkWithDefaultAnd(
+    "NOT a AND b",
+    And(Not(Term("a")), Term("b")),
+  )
+
+  checkWithDefaultOr(
+    "a AND NOT b",
+    And(Term("a"), Not(Term("b"))),
+  )
+  checkWithDefaultAnd(
+    "a AND NOT b",
+    And(Term("a"), Not(Term("b"))),
+  )
+
+  checkWithDefaultOr(
+    "a AND b OR x",
+    Or(And(Term("a"), Term("b")), Term("x")),
+  )
+  checkWithDefaultAnd(
+    "a AND b OR x",
+    Or(And(Term("a"), Term("b")), Term("x")),
+  )
+
+  checkWithDefaultOr(
+    "a AND b OR x AND y",
+    Or(And(Term("a"), Term("b")), And(Term("x"), Term("y"))),
+  )
+  checkWithDefaultAnd(
+    "a AND b OR x AND y",
+    Or(And(Term("a"), Term("b")), And(Term("x"), Term("y"))),
+  )
+
+  checkWithDefaultOr(
+    "a AND b AND c OR x",
+    Or(And(Term("a"), Term("b"), Term("c")), Term("x")),
+  )
+  checkWithDefaultAnd(
+    "a AND b AND c OR x",
+    Or(And(Term("a"), Term("b"), Term("c")), Term("x")),
+  )
 
   checkWithDefaultOr(
     "a b AND c",
