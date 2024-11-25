@@ -95,9 +95,8 @@ class QueryParser(
         case ((qs, last), opsAndQs) =>
           Chain.fromSeq(qs) ++: NonEmptyChain(Op.associateOps(last, opsAndQs))
       }
-    // TODO probably a more efficient way to do this....
     // Repeat to get "trailing" queries as leading queries in a new pass
-    combined.repUntil(maybeSpace ~ P.end).map(ns => ns.reduce.toNonEmptyList)
+    combined.repUntilAs(maybeSpace ~ P.end)(multipleChainsAccumulator)
   }
 
   /** Parse a suffix op query
@@ -306,6 +305,22 @@ private object QueryParserHelpers {
           }
 
           def finish() = (bldr.result(), last)
+        }
+    }
+
+  implicit def multipleChainsAccumulator[A]: Accumulator[NonEmptyChain[A], NonEmptyList[A]] =
+    new Accumulator[NonEmptyChain[A], NonEmptyList[A]] {
+      def newAppender(first: NonEmptyChain[A]): Appender[NonEmptyChain[A], NonEmptyList[A]] =
+        new Appender[NonEmptyChain[A], NonEmptyList[A]] {
+          val head = first.head
+          val bldr = List.newBuilder[A]
+          bldr ++= first.tail.iterator
+          def append(item: NonEmptyChain[A]) = {
+            bldr ++= item.iterator
+            this
+          }
+
+          def finish() = NonEmptyList(head, bldr.result())
         }
     }
 }
