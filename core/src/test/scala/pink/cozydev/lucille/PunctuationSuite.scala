@@ -28,12 +28,12 @@ class PunctuationSuite extends munit.FunSuite {
   }
 
   test("parse single term with slash") {
-    val r = parseQ("typelevel.com/cats")
+    val r = parseQ("typelevel.com\\/cats")
     assertEquals(r, Right(Term("typelevel.com/cats")))
   }
 
   test("parse single term with dash") {
-    val r = parseQ("cats-effect")
+    val r = parseQ("cats\\-effect")
     assertEquals(r, Right(Term("cats-effect")))
   }
 
@@ -45,6 +45,16 @@ class PunctuationSuite extends munit.FunSuite {
   test("parse fieldQ with phraseQ with dash") {
     val r = parseQ("name:\"cats-effect\"")
     assertEquals(r, Right(Field("name", Phrase("cats-effect"))))
+  }
+
+  test("parse phrase query with quotes") {
+    val r = parseQ("\"the cat said \\\"meow\\\" loudly\"")
+    assertEquals(r, Right(Phrase("""the cat said "meow" loudly""")))
+  }
+
+  test("parse phrase query with backslash") {
+    val r = parseQ("\"This is a blackslash: \\\\, wow!\"")
+    assertEquals(r, Right(Phrase("""This is a blackslash: \, wow!""")))
   }
 
 }
