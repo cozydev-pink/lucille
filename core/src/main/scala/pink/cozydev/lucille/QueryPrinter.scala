@@ -17,9 +17,8 @@
 package pink.cozydev.lucille
 
 import pink.cozydev.lucille.Query._
+import pink.cozydev.lucille.QueryParserHelpers._
 import cats.data.NonEmptyList
-import pink.cozydev.lucille.Parser.luceneSpecial
-import pink.cozydev.lucille.Parser.escapedTokensPhraseSet
 
 object QueryPrinter {
 
