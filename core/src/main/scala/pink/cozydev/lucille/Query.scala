@@ -139,14 +139,6 @@ object Query {
       Or(NonEmptyList(left, bldr.result()), last)
     }
 
-    def fromListUnsafe(queries: List[Query]): Or =
-      queries match {
-        case Nil =>
-          throw new IllegalArgumentException("Cannot create Or query from empty list")
-        case _ :: Nil =>
-          throw new IllegalArgumentException("Cannot create Or query from single element list")
-        case l :: r :: tail => Or.apply(l, r, tail)
-      }
   }
 
   /**  An And operator
@@ -176,14 +168,6 @@ object Query {
       And(NonEmptyList(left, bldr.result()), last)
     }
 
-    def fromListUnsafe(queries: List[Query]): And =
-      queries match {
-        case Nil =>
-          throw new IllegalArgumentException("Cannot create And query from empty list")
-        case _ :: Nil =>
-          throw new IllegalArgumentException("Cannot create And query from single element list")
-        case l :: r :: tail => And.apply(l, r, tail)
-      }
   }
 
   /** A Not operator
