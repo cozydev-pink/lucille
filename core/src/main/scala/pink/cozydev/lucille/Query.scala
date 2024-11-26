@@ -118,7 +118,7 @@ object Query {
     *
     * @param qs the queries to union
     */
-  final case class Or private (allButLast: NonEmptyList[Query], last: Query) extends Query {
+  final case class Or (allButLast: NonEmptyList[Query], last: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): Or =
       this.copy(last = last.mapLastTerm(f))
   }
@@ -155,7 +155,7 @@ object Query {
     *
     * @param qs the queries to intersect
     */
-  final case class And private (allButLast: NonEmptyList[Query], last: Query) extends Query {
+  final case class And (allButLast: NonEmptyList[Query], last: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): And =
       this.copy(last = last.mapLastTerm(f))
   }

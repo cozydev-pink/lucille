@@ -35,9 +35,14 @@ private[lucille] object Op {
   def associateOps(first: Query, opQs: List[(Op, Query)]): Query =
     opQs match {
       case Nil => first
+      case (onlyOp, secondQ) :: Nil =>
+        onlyOp match {
+          case OR => Query.Or(NonEmptyList.one(first), secondQ)
+          case AND => Query.And(NonEmptyList.one(first), secondQ)
+        }
       case (headOp, headQ) :: remaining =>
-        var currentOp = headOp
-        var currentQ = headQ
+        var lastOp = headOp
+        var lastQ = headQ
 
         // We'll collect queries in 'tempAccumulator' while successive operators are the same type
         // e.g. (OR, q1), (OR, q2), (OR, q3), ...
@@ -48,62 +53,58 @@ private[lucille] object Op {
         // e.g. (OR, q1), (AND, q2), ...
         val bldr = ListBuffer.empty[Query]
 
-        // Iterate through Op-Query pairs, looking "one ahead" to decide how to process 'currentQ'
-        remaining.foreach { case (nextOp, nextQ) =>
-          if (currentOp == nextOp) {
-            // 'nextOp' hasn't changed, keep accumulating
-            tempAccumulator += currentQ
+        // Iterate through Op-Query pairs
+        remaining.foreach { case (currentOp, currentQ) =>
+          if (lastOp == currentOp) {
+            // Op hasn't changed, keep accumulating
+            tempAccumulator += lastQ
           } else {
-            // 'nextOp' is different from 'currentOp', so we're going to collapse the queries we've
-            // accumulated so far into an AND/OR query before continuing.
+            // 'currentOp' is different from 'lastOp'
+            // Collapse accumulated queries so far into an AND/OR query before continuing.
             // How we do that depends on the precedence of the operator we're switching to.
             // AND has higher precedence than OR, so if we are switching from OR to AND, we
-            // collapse before accumulating 'currentQ' and instead add it to the newly cleared
+            // collapse before accumulating 'lastQ' and instead add it to the newly cleared
             // accumulator.
-            nextOp match {
+            currentOp match {
               case AND =>
                 // OR -> AND
-                // e.g. previousQ OR (currentQ AND nextQ)
-                // From OR to AND, collapse now, new AND gets currentQ
+                // e.g. OR (lastQ AND currentQ)
+                // From OR to AND, collapse now, new AND gets lastQ
                 val qs = tempAccumulator.result()
                 tempAccumulator.clear()
                 bldr ++= qs
-                tempAccumulator += currentQ
+                tempAccumulator += lastQ
               case OR =>
                 // AND -> OR
-                // e.g. (previousQ AND currentQ) OR nextQ
-                // From AND to OR, add currentQ to AND query
+                // e.g. (... AND lastQ) OR currentQ
+                // From AND to OR, add lastQ to AND query
                 val qs = NonEmptyList.fromListUnsafe(tempAccumulator.result())
                 tempAccumulator.clear()
-                bldr += Query.And(qs, currentQ)
+                bldr += Query.And(qs, lastQ)
             }
           }
-          // get ready for next iteration
-          currentOp = nextOp
-          currentQ = nextQ
+          // prep for next iteration
+          lastQ = currentQ
+          lastOp = currentOp
         }
+        val qs = tempAccumulator.result()
 
-        // We're done iterating
-        // But because we were looking one ahead, we still have not processed the last 'currentQ'.
-        // It's safe to add 'currentQ' to 'tempAccumulator', it's either already collecting queries
-        // for 'currentOp', or we've just cleared it for a new Op type.
-        currentOp match {
-          case AND =>
-            // Final OP was an AND, collapse into one AND query, add to 'bldr'
-            // fromListUnsafe safe because last thing we did was add something to tempAccumulator
-            val qs = NonEmptyList.fromListUnsafe(tempAccumulator.result())
-            bldr += Query.And(qs, currentQ)
-          case OR =>
-            // Final OP was an OR, directly add to 'bldr'.
-            // Safe because all the ANDs have been grouped together.
-            // Wrapping in an OR query would create unnecessary nesting.
-            bldr ++= tempAccumulator.result()
-            bldr += currentQ
+        bldr.result() match {
+          case Nil =>
+            lastOp match {
+              case OR => Query.Or(NonEmptyList.fromListUnsafe(qs), lastQ)
+              case AND => Query.And(NonEmptyList.fromListUnsafe(qs), lastQ)
+            }
+          case head :: tail =>
+            lastOp match {
+              case OR => Query.Or(NonEmptyList(head, tail ++ qs), lastQ)
+              case AND =>
+                Query.Or(
+                  NonEmptyList(head, tail),
+                  Query.And(NonEmptyList.fromListUnsafe(qs), lastQ),
+                )
+            }
         }
-        val finalQs = bldr.result()
-        // If we only have one query, it must be an AND query, directly return that.
-        // Otherwise we wrap our multiple queries in an OR query.
-        if (finalQs.size == 1) finalQs.head else Query.Or.fromListUnsafe(finalQs)
     }
 
 }
