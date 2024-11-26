@@ -18,6 +18,7 @@ package pink.cozydev.lucille.internal
 
 import pink.cozydev.lucille.Query
 import scala.collection.mutable.ListBuffer
+import cats.data.NonEmptyList
 
 private[lucille] sealed trait Op extends Product with Serializable
 
@@ -71,12 +72,10 @@ private[lucille] object Op {
               case OR =>
                 // AND -> OR
                 // e.g. (previousQ AND currentQ) OR nextQ
-                // From AND to OR, add currentQ before collapsing
-                tempAccumulator += currentQ
-                val qs = tempAccumulator.result()
+                // From AND to OR, add currentQ to AND query
+                val qs = NonEmptyList.fromListUnsafe(tempAccumulator.result())
                 tempAccumulator.clear()
-
-                bldr += Query.And.fromListUnsafe(qs)
+                bldr += Query.And(qs, currentQ)
             }
           }
           // get ready for next iteration
@@ -88,17 +87,18 @@ private[lucille] object Op {
         // But because we were looking one ahead, we still have not processed the last 'currentQ'.
         // It's safe to add 'currentQ' to 'tempAccumulator', it's either already collecting queries
         // for 'currentOp', or we've just cleared it for a new Op type.
-        tempAccumulator += currentQ
-        val innerQs = tempAccumulator.result()
         currentOp match {
           case AND =>
             // Final OP was an AND, collapse into one AND query, add to 'bldr'
-            bldr += Query.And.fromListUnsafe(innerQs)
+            // fromListUnsafe safe because last thing we did was add something to tempAccumulator
+            val qs = NonEmptyList.fromListUnsafe(tempAccumulator.result())
+            bldr += Query.And(qs, currentQ)
           case OR =>
             // Final OP was an OR, directly add to 'bldr'.
             // Safe because all the ANDs have been grouped together.
             // Wrapping in an OR query would create unnecessary nesting.
-            bldr ++= innerQs
+            bldr ++= tempAccumulator.result()
+            bldr += currentQ
         }
         val finalQs = bldr.result()
         // If we only have one query, it must be an AND query, directly return that.
