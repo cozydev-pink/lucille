@@ -40,8 +40,8 @@ object QueryPrinter {
     def printQ(query: Query): Unit =
       query match {
         case q: TermQuery => strTermQuery(q)
-        case q: Or => printEachNel(q.qs, " OR ")
-        case q: And => printEachNel(q.qs, " AND ")
+        case q: Or => printEach(q.allButLast, q.last, " OR ")
+        case q: And => printEach(q.allButLast, q.last, " AND ")
         case q: Not =>
           sb.append("NOT ")
           printQ(q.q)
@@ -141,6 +141,16 @@ object QueryPrinter {
         if (escapedTokensPhraseSet.contains(c)) sb.append('\\')
         sb.append(c)
       }
+
+    def printEach(allButLast: NonEmptyList[Query], last: Query, sep: String): Unit = {
+      printQ(allButLast.head)
+      allButLast.tail.foreach { q =>
+        sb.append(sep)
+        printQ(q)
+      }
+      sb.append(sep)
+      printQ(last)
+    }
 
     printQ(query)
     sb.result()
