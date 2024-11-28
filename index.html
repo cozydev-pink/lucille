@@ -89,6 +89,7 @@
     <li class="level1 nav-leaf"><a href="#parsing">Parsing</a></li>
     <li class="level1 nav-leaf"><a href="#printing">Printing</a></li>
     <li class="level1 nav-leaf"><a href="#last-query-rewriting">Last Query Rewriting</a></li>
+    <li class="level1 nav-leaf"><a href="#associativity">Associativity</a></li>
   </ul>
 
   <p class="footer"></p>
@@ -213,6 +214,20 @@
 //     )
 //   )
 // )</span></code></pre>
+        
+        <h3 id="associativity" class="section"><a class="anchor-link left" href="#associativity"><i class="icofont-laika link">&#xef71;</i></a>Associativity</h3>
+        <p>Queries may contain a mix of AND/OR operators, e.g. <code>cats AND dogs OR fish</code>.
+        It is best to add parenthesis to help indicate your intent, either <code>(cats AND dogs) OR fish</code> or <code>cats AND (dogs OR fish)</code>, as both of these queries could evaluate differently.
+        In the absence of clarifying parenthesis, Lucille parses according to the precedence of the boolean operators.
+        The highest and most immediately binding operator is <code>NOT</code>, then <code>AND</code> and finally <code>OR</code>.</p>
+        <p>Consider the following examples:</p>
+        <pre><code>NOT a AND b         -&gt;  (NOT A) AND b
+a AND NOT b         -&gt;  A AND (NOT b)
+a AND b OR x        -&gt;  (a AND b) OR x
+a AND b OR x AND y  -&gt;  (a AND b) OR (x AND y)
+a AND b AND c OR x  -&gt;  (a AND b AND c) OR x</code></pre>
+        <p>It&#39;s worth noting that the last example could equivalently be written as <code>((a AND b) AND c) OR x</code> or <code>(a AND (b AND c)) OR x</code>.
+        However, Lucille parses sequences of repeated operators into a single <code>Query.And</code> or <code>Query.Or</code> node to avoid unnecessary nesting.</p>
 
         
 <hr class="footer-rule"/>
