@@ -35,7 +35,7 @@ class AssociativitySuite extends munit.FunSuite {
   }
 
   val checkWithDefaultOr: (TestOptions, Query) => Unit =
-    check(QueryParser.default, "default OR :")
+    check(QueryParser.default, "default OR :") // space before colon is load bearing
 
   val checkWithDefaultAnd: (TestOptions, Query) => Unit =
     check(QueryParser.withDefaultOperatorAND, "default AND:")
