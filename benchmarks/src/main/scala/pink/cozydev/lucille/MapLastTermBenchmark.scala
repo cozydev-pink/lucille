@@ -36,8 +36,7 @@ class MapLastTermBenchmark {
 
   val fullQuery: String =
     "this is a long query that will be broken up into one query per character in this string"
-  var partialQueries: Vector[String] = _
-  val associativityQueries = Vector(
+  val associativityQueryStrings = Vector(
     "NOT a AND b",
     "a AND NOT b",
     "a AND b OR x",
@@ -53,16 +52,24 @@ class MapLastTermBenchmark {
     "a b AND c OR d OR e",
   )
 
+  var partialQueries: Vector[Query] = _
+  var associativityQueries: Vector[Query] = _
+
   @Setup
   def setup(): Unit =
-    partialQueries = (1 to fullQuery.size).map(fullQuery.take).toVector
+    partialQueries = (1 to fullQuery.size)
+      .map(fullQuery.take)
+      .toVector
+      .map(QueryParser.default.parse)
+      .map(_.toOption.get)
+  associativityQueries = associativityQueryStrings.map(QueryParser.parse).map(_.toOption.get)
 
   @Benchmark
   def partialQueriesMapLastTerm(): Unit =
-    partialQueries.foreach(q => QueryParser.default.parse(q).map(_.mapLastTerm(rewriteQ)))
+    partialQueries.foreach(q => q.mapLastTerm(rewriteQ))
 
   @Benchmark
   def associativityQueriesMapLastTerm(): Unit =
-    associativityQueries.foreach(q => QueryParser.default.parse(q).map(_.mapLastTerm(rewriteQ)))
+    associativityQueries.foreach(q => q.mapLastTerm(rewriteQ))
 
 }
