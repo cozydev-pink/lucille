@@ -20,8 +20,6 @@ package benchmarks
 import java.util.concurrent.TimeUnit
 import org.openjdk.jmh.annotations._
 
-import cats.data.NonEmptyList
-
 /** To run the benchmark from within sbt:
   *
   * jmh:run -i 10 -wi 10 -f 2 -t 1 pink.cozydev.lucille.benchmarks.QueryPrinterBenchmark
@@ -41,8 +39,8 @@ class QueryPrinterBenchmark {
 
   @Setup
   def setup(): Unit = {
-    orQueries10 = Or(NonEmptyList(Term("o"), (1 to 10).map(i => Term(i.toString)).toList))
-    orQueries1000 = Or(NonEmptyList(Term("o"), (1 to 1000).map(i => Term(i.toString)).toList))
+    orQueries10 = Or(Term("o"), Term("o"), (1 to 10).map(i => Term(i.toString)).toList)
+    orQueries1000 = Or(Term("o"), Term("o"), (1 to 1000).map(i => Term(i.toString)).toList)
     queries = Vector(
       Term("term"),
       Phrase("phrase query"),

@@ -16,19 +16,20 @@
 
 package pink.cozydev.lucille
 
+import cats.parse.{Accumulator, Appender, Parser0}
 import cats.parse.{Parser => P}
-import cats.parse.Rfc5234.{sp, alpha, digit, wsp}
 import cats.parse.Parser.{char => pchar}
-import cats.data.NonEmptyList
-import cats.parse.Parser0
+import cats.parse.Rfc5234.{sp, alpha, digit, wsp}
+import cats.data.{Chain, NonEmptyChain, NonEmptyList}
 import cats.syntax.all._
+
 import internal.Op
 
 class QueryParser(
     defaultBooleanOR: Boolean
 ) {
   import Query._
-  import Parser._
+  import QueryParserHelpers._
 
   /** Parse a not query
     * e.g. 'animals NOT (cats AND dogs)'
@@ -78,15 +79,25 @@ class QueryParser(
     * e.g. 'q0 q1 OR q2 q3'.
     * Parsing repeats so that we can parse q3, the first iteration only gets 'q0 q1 OR q2'
     */
-  private def nelQueries(query: P[Query]): P[NonEmptyList[Query]] =
-    (maybeSpace.with1 *> qWithSuffixOps(query)).repUntil(maybeSpace ~ P.end).map(_.flatten)
-
-  /** Parse simple queries followed by suffix op queries
-    * e.g. 'q0 q1 OR q2'
-    */
-  private def qWithSuffixOps(query: P[Query]): P[NonEmptyList[Query]] =
-    (query.repSep(sp.rep) ~ suffixOps(query))
-      .map { case (h, t) => internal.Op.associateOps(h, t, defaultBooleanOR) }
+  def nelQueries(query: P[Query]): P[NonEmptyList[Query]] = {
+    // Get all leading queries 'q0 q1'
+    val qsAndLast = (query <* maybeSpace).repAs(min = 1)(allButLastAccumulator0)
+    val combined: P[NonEmptyChain[Query]] =
+      // lead queries, plus the chain of OP-Query pairs, 'q0 q1 OR q2'
+      (maybeSpace.with1 *> (qsAndLast ~ suffixOps(query))).map {
+        // Only one query
+        case ((Nil, last), Nil) => NonEmptyChain(last)
+        // A few queries, no trailing explicit Ops
+        case ((qs, last), Nil) => Chain.fromSeq(qs) ++: NonEmptyChain(last)
+        // One query and then Ops, associate
+        case ((Nil, last), opsAndQs) => NonEmptyChain(Op.associateOps(last, opsAndQs))
+        // A few queries and then Ops, queries and then associated ops
+        case ((qs, last), opsAndQs) =>
+          Chain.fromSeq(qs) ++: NonEmptyChain(Op.associateOps(last, opsAndQs))
+      }
+    // Repeat to get "trailing" queries as leading queries in a new pass
+    combined.repUntilAs(maybeSpace ~ P.end)(multipleChainsAccumulator)
+  }
 
   /** Parse a suffix op query
     * e.g. 'OR term1 OR term2$' parses completely
@@ -112,9 +123,9 @@ class QueryParser(
     */
   private def wrappedQueries(query: P[Query]): P[Query] =
     nelQueries(query).map {
-      case NonEmptyList(singleQ, Nil) => singleQ
-      case multipleQs =>
-        if (defaultBooleanOR) Or.apply(multipleQs) else And.apply(multipleQs)
+      case NonEmptyList(left, Nil) => left
+      case NonEmptyList(left, right :: tail) =>
+        if (defaultBooleanOR) Or(left, right, tail) else And(left, right, tail)
     }
 
   /** Recursively parse compound queries
@@ -170,7 +181,7 @@ object QueryParser {
 
 }
 
-private object Parser {
+private object QueryParserHelpers {
   import Query._
 
   val dquote = P.charIn(Set('"', '“', '”'))
@@ -280,4 +291,36 @@ private object Parser {
   val or = (P.string("OR") | P.string("||")).as(internal.Op.OR)
   val and = (P.string("AND") | P.string("&&")).as(internal.Op.AND)
   val infixOp = (or | and).withContext("infixOp")
+
+  implicit def allButLastAccumulator0[A]: Accumulator[A, (List[A], A)] =
+    new Accumulator[A, (List[A], A)] {
+      def newAppender(first: A): Appender[A, (List[A], A)] =
+        new Appender[A, (List[A], A)] {
+          var last = first
+          val bldr = List.newBuilder[A]
+          def append(item: A) = {
+            bldr += last
+            last = item
+            this
+          }
+
+          def finish() = (bldr.result(), last)
+        }
+    }
+
+  implicit def multipleChainsAccumulator[A]: Accumulator[NonEmptyChain[A], NonEmptyList[A]] =
+    new Accumulator[NonEmptyChain[A], NonEmptyList[A]] {
+      def newAppender(first: NonEmptyChain[A]): Appender[NonEmptyChain[A], NonEmptyList[A]] =
+        new Appender[NonEmptyChain[A], NonEmptyList[A]] {
+          val head = first.head
+          val bldr = List.newBuilder[A]
+          bldr ++= first.tail.iterator
+          def append(item: NonEmptyChain[A]) = {
+            bldr ++= item.iterator
+            this
+          }
+
+          def finish() = NonEmptyList(head, bldr.result())
+        }
+    }
 }

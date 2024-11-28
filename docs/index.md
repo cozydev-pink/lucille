@@ -94,3 +94,23 @@ This also works when the last term is part of a boolean or field query.
 ```scala mdoc
 QueryParser.parse("cats AND do").map(mq => mq.mapLastTerm(expandQ))
 ```
+
+### Associativity
+
+Queries may contain a mix of AND/OR operators, e.g. `cats AND dogs OR fish`.
+It is best to add parenthesis to help indicate your intent, either `(cats AND dogs) OR fish` or `cats AND (dogs OR fish)`, as both of these queries could evaluate differently.
+In the absence of clarifying parenthesis, Lucille parses according to the precedence of the boolean operators.
+The highest and most immediately binding operator is `NOT`, then `AND` and finally `OR`.
+
+Consider the following examples:
+
+```
+NOT a AND b         ->  (NOT A) AND b
+a AND NOT b         ->  A AND (NOT b)
+a AND b OR x        ->  (a AND b) OR x
+a AND b OR x AND y  ->  (a AND b) OR (x AND y)
+a AND b AND c OR x  ->  (a AND b AND c) OR x
+```
+
+It's worth noting that the last example could equivalently be written as `((a AND b) AND c) OR x` or `(a AND (b AND c)) OR x`.
+However, Lucille parses sequences of repeated operators into a single `Query.And` or `Query.Or` node to avoid unnecessary nesting.
