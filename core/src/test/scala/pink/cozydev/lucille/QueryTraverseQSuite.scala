@@ -100,9 +100,22 @@ class QueryTraverseQSuite extends munit.FunSuite {
     assertEquals(actual, Right(expected))
   }
 
-  test("Query.And.traverseQ allows changing query types") {
+  test("Query.And.traverseQ allows changing TermQuery types") {
     val q = And(Term("cats"), Not(Term("dogs")))
     val actualAnd = q.traverseQ(termToPhrase)
     assertEquals(actualAnd, Right(And(Phrase("cats"), Not(Phrase("dogs")))))
+  }
+
+  def flipBooleans(q: Query): Either[String, Query] = q match {
+    case Or(NonEmptyList(first, second :: qTail)) => Right(And(second, first, qTail))
+    case And(NonEmptyList(first, second :: qTail)) => Right(Or(second, first, qTail))
+    case Not(q) => Right(q)
+    case q => Right(q)
+  }
+
+  test("Query.Or.traverseQ is unaffected by functions trying to flip boolean queries") {
+    val q = Or(Term("cats"), Term("dogs"), And(Term("cats"), Not(Term("dogs"))))
+    val actualOr = q.traverseQ(flipBooleans)
+    assertEquals(actualOr, Right(q))
   }
 }

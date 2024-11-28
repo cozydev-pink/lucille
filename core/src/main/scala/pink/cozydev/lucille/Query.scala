@@ -29,14 +29,15 @@ sealed trait Query extends Product with Serializable {
     */
   def mapLastTerm(f: Query.Term => Query): Query
 
-  /** Traverse or "walk" over the Query tree structure applying the effectful function `f` along
-    * the way and collecting the results. If the resulting context `G` has a Query, it will have
-    * the same structure as the original Query.
+  /** Traverse or "walk" over the Query tree structure applying the effectful function `f` to the
+    * TermQuery leaf nodes along the way and collecting the results. If the resulting context `G`
+    * has a Query, it will have the same structure as the original Query. "Branch" queries like
+    * Query.And/Or/Not/Group, and similar are not affected, just the leaf nodes.
     *
     * @param f effectful function
     * @return the query in context G
     */
-  def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query]
+  def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query]
 
   def and(q: Query): Query = Query.And(this, q)
 
@@ -53,7 +54,7 @@ sealed trait TermQuery extends Query {
   def mapLastTerm(f: Query.Term => Query): Query = this
 
   // TermQuery has no further structure to traverse, just run the function
-  def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] =
+  def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] =
     f(this)
 }
 
@@ -135,7 +136,7 @@ object Query {
     def mapLastTerm(f: Query.Term => Query): Or =
       new Or(rewriteLastTerm(qs, f)) {}
 
-    def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] = {
+    def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] = {
       val gNelQ: G[NonEmptyList[Query]] = qs.traverse(q => q.traverseQ(f))
       Applicative[G].map(gNelQ)(qNel => new Or(qNel) {})
     }
@@ -167,7 +168,7 @@ object Query {
     def mapLastTerm(f: Query.Term => Query): And =
       new And(rewriteLastTerm(qs, f)) {}
 
-    def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] = {
+    def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] = {
       val gNelQ: G[NonEmptyList[Query]] = qs.traverse(q => q.traverseQ(f))
       Applicative[G].map(gNelQ)(qNel => new And(qNel) {})
     }
@@ -200,7 +201,7 @@ object Query {
     def mapLastTerm(f: Query.Term => Query): Not =
       Not(q.mapLastTerm(f))
 
-    def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] =
+    def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] =
       Applicative[G].map(q.traverseQ(f))(newQ => Not(newQ))
   }
 
@@ -213,7 +214,7 @@ object Query {
   final case class Group(q: Query) extends Query {
     def mapLastTerm(f: Query.Term => Query): Group = this
 
-    def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] =
+    def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] =
       Applicative[G].map(q.traverseQ(f))(newQ => Group(newQ))
   }
 
@@ -227,7 +228,7 @@ object Query {
     def mapLastTerm(f: Query.Term => Query): UnaryPlus =
       UnaryPlus(q.mapLastTerm(f))
 
-    def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] =
+    def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] =
       Applicative[G].map(q.traverseQ(f))(newQ => UnaryPlus(newQ))
   }
 
@@ -241,7 +242,7 @@ object Query {
     def mapLastTerm(f: Query.Term => Query): UnaryMinus =
       UnaryMinus(q.mapLastTerm(f))
 
-    def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] =
+    def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] =
       Applicative[G].map(q.traverseQ(f))(newQ => UnaryMinus(newQ))
   }
 
@@ -255,7 +256,7 @@ object Query {
   final case class Boost(q: Query, boost: Float) extends Query {
     def mapLastTerm(f: Query.Term => Query): Boost = this
 
-    def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] =
+    def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] =
       Applicative[G].map(q.traverseQ(f))(newQ => this.copy(q = newQ))
   }
 
@@ -269,7 +270,7 @@ object Query {
   final case class MinimumMatch(qs: NonEmptyList[Query], num: Int) extends Query {
     def mapLastTerm(f: Query.Term => Query): MinimumMatch = this
 
-    def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] = {
+    def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] = {
       val gNelQ: G[NonEmptyList[Query]] = qs.traverse(q => q.traverseQ(f))
       Applicative[G].map(gNelQ)(qNel => this.copy(qs = qNel))
     }
@@ -286,7 +287,7 @@ object Query {
     def mapLastTerm(f: Query.Term => Query): Field =
       Field(field, q.mapLastTerm(f))
 
-    def traverseQ[G[_]: Applicative](f: Query => G[Query]): G[Query] =
+    def traverseQ[G[_]: Applicative](f: TermQuery => G[Query]): G[Query] =
       Applicative[G].map(q.traverseQ(f))(newQ => this.copy(q = newQ))
   }
 
