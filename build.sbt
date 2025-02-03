@@ -62,7 +62,7 @@ lazy val docs = project
   .dependsOn(core.jvm)
   .settings(
     tlSiteApiPackage := Some("lucille"),
-    tlSiteHelium := {
+    tlSiteHelium :=
       tlSiteHelium.value.site.darkMode.disabled.site
         .topNavigationBar(
           homeLink = IconLink.external("https://github.com/cozydev-pink/lucille", HeliumIcon.home)
@@ -77,6 +77,5 @@ lazy val docs = project
               TextLink.external("https://typelevel.org/cats/", "cats"),
             )
           )
-        )
-    },
+        ),
   )
