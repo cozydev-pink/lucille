@@ -40,9 +40,9 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
     name := "lucille",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-parse" % "1.0.0",
-      "org.typelevel" %%% "cats-core" % "2.10.0",
-      "org.scalameta" %%% "munit" % "1.0.0" % Test,
+      "org.typelevel" %%% "cats-parse" % "1.1.0",
+      "org.typelevel" %%% "cats-core" % "2.13.0",
+      "org.scalameta" %%% "munit" % "1.1.0" % Test,
     ),
   )
 
