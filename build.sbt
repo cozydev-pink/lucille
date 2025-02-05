@@ -26,9 +26,9 @@ ThisBuild / tlJdkRelease := Some(8)
 
 val Scala212 = "2.12.20"
 
-val Scala213 = "2.13.15"
+val Scala213 = "2.13.16"
 
-ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, "3.3.4")
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, "3.3.5")
 
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
@@ -40,9 +40,9 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
     name := "lucille",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-parse" % "1.0.0",
-      "org.typelevel" %%% "cats-core" % "2.10.0",
-      "org.scalameta" %%% "munit" % "1.0.0" % Test,
+      "org.typelevel" %%% "cats-parse" % "1.1.0",
+      "org.typelevel" %%% "cats-core" % "2.13.0",
+      "org.scalameta" %%% "munit" % "1.1.0" % Test,
     ),
   )
 
