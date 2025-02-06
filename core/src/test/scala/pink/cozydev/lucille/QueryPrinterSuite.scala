@@ -122,6 +122,12 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
     val str = QueryPrinter.print(q)
     assertEquals(str, "msg:(hello hi)@2")
   }
+
+  test("prints Field query with OR") {
+    val q = Field("msg", Or(Term("a"), Term("b")))
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "msg:(a OR b)")
+  }
 }
 
 class QueryPrinterWildCardSuite extends munit.FunSuite {
