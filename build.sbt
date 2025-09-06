@@ -22,7 +22,7 @@ val Scala212 = "2.12.20"
 
 val Scala213 = "2.13.16"
 
-ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, "3.3.5")
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, "3.3.6")
 
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
@@ -36,7 +36,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-parse" % "1.1.0",
       "org.typelevel" %%% "cats-core" % "2.13.0",
-      "org.scalameta" %%% "munit" % "1.1.0" % Test,
+      "org.scalameta" %%% "munit" % "1.1.1" % Test,
     ),
   )
 
