@@ -44,7 +44,12 @@ object QueryPrinter {
         case q: And => printEachNel(q.qs, " AND ")
         case q: Not =>
           sb.append("NOT ")
-          printQ(q.q)
+          q.q match {
+            case sq: TermQuery => strTermQuery(sq)
+            case gq: Group => printQ(gq)
+            case mq: MinimumMatch => printQ(mq)
+            case qq => sb.append('('); printQ(qq); sb.append(')')
+          }
         case q: Group =>
           sb.append('(')
           printQ(q.q)
@@ -64,7 +69,12 @@ object QueryPrinter {
         case q: Field =>
           sb.append(q.field)
           sb.append(':')
-          printQ(q.q)
+          q.q match {
+            case sq: TermQuery => strTermQuery(sq)
+            case gq: Group => printQ(gq)
+            case mq: MinimumMatch => printQ(mq)
+            case qq => sb.append('('); printQ(qq); sb.append(')')
+          }
       }
 
     def printBoostQuery(q: Boost): Unit = {
