@@ -27,22 +27,34 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
     assertEquals(str, "hello OR hi")
   }
 
+  test("prints OR Group query") {
+    val q = Group(Or(Term("hello"), Term("hi")))
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "(hello OR hi)")
+  }
+
   test("prints AND query") {
     val q = And(Term("hello"), Term("hi"))
     val str = QueryPrinter.print(q)
     assertEquals(str, "hello AND hi")
   }
 
+  test("prints AND Group query") {
+    val q = Group(And(Term("hello"), Term("hi")))
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "(hello AND hi)")
+  }
+
   test("prints Not query") {
-    val q = Not(Group(Or(Term("hello"), Term("hi"))))
+    val q = Not(Or(Term("hello"), Term("hi")))
     val str = QueryPrinter.print(q)
     assertEquals(str, "NOT (hello OR hi)")
   }
 
-  test("prints Group query") {
-    val q = Group(Or(Term("hello"), Term("hi")))
+  test("prints Not Group query") {
+    val q = Not(Group(Or(Term("hello"), Term("hi"))))
     val str = QueryPrinter.print(q)
-    assertEquals(str, "(hello OR hi)")
+    assertEquals(str, "NOT (hello OR hi)")
   }
 
   test("prints UnaryMinus query") {
@@ -51,10 +63,22 @@ class QueryPrinterSimpleQueriesSuite extends munit.FunSuite {
     assertEquals(str, "-hello")
   }
 
+  test("prints UnaryMinus Group query") {
+    val q = Group(UnaryMinus(Term("hello")))
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "(-hello)")
+  }
+
   test("prints UnaryPlus query") {
     val q = UnaryPlus(Term("hello"))
     val str = QueryPrinter.print(q)
     assertEquals(str, "+hello")
+  }
+
+  test("prints UnaryPlus Group query") {
+    val q = Group(UnaryPlus(Term("hello")))
+    val str = QueryPrinter.print(q)
+    assertEquals(str, "(+hello)")
   }
 
   test("prints MinimumMatch query") {
