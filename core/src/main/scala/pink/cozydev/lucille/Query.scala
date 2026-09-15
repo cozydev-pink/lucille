@@ -104,7 +104,7 @@ object Query {
 
   /** A regex query
     * Search with a regular expression, the pattern is given between forward slashes, `/`.
-    * e.g. '/.ump(s|ing)'
+    * e.g. '/.ump(s|ing)/' yields TermRegex(".ump(s|ing)")
     *
     * @param str the regular expression query
     */
@@ -112,7 +112,7 @@ object Query {
 
   /** A range query
     * Search for terms that fall between some upper and lower bounds. The bounds can be inclusive or exclusive.
-    * e.g. '{cats TO dogs}', '[1 TO *]'
+    * e.g. '[cats TO dogs]' (inclusive), or '{1 TO *}' (exclusive)
     *
     * @param lower the lower bound
     * @param upper the upper bound

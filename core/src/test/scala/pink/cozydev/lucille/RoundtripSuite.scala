@@ -47,4 +47,12 @@ class RoundtripSuite extends ScalaCheckSuite {
     forAll(generators.plainFuzzy)(q => assertRoundTrips(q))
   }
 
+  property("Query.TermRegex printing roundtrips") {
+    forAll(generators.plainRegex)(q => assertRoundTrips(q))
+  }
+
+  property("Query.TermRange printing roundtrips") {
+    forAll(generators.plainRange)(q => assertRoundTrips(q))
+  }
+
 }

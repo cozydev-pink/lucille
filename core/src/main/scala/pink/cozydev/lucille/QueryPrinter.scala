@@ -111,13 +111,16 @@ object QueryPrinter {
           sb.append(q.str)
           sb.append('~')
           q.num.foreach(i => sb.append(i.toString()))
-        case q: TermRegex => sb.append(q.str)
+        case q: TermRegex =>
+          sb.append('/')
+          sb.append(q.str)
+          sb.append('/')
         case q: TermRange =>
-          if (q.lowerInc) sb.append('{') else sb.append('[')
+          sb.append(if (q.lowerInc) '[' else '{')
           sb.append(q.lower.getOrElse("*"))
           sb.append(" TO ")
           sb.append(q.upper.getOrElse("*"))
-          if (q.upperInc) sb.append('}') else sb.append(']')
+          sb.append(if (q.upperInc) ']' else '}')
         case q: WildCard =>
           printWildCard(q)
       }
