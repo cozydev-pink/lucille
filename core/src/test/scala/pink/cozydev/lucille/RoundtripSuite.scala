@@ -18,16 +18,14 @@ package pink.cozydev.lucille
 
 import munit.ScalaCheckSuite
 import org.scalacheck.Prop._
-import pink.cozydev.lucille.arbitraries._
 
 class RoundtripSuite extends ScalaCheckSuite {
 
-  property("TermQuery printing roundtrips") {
-    forAll { (tq: Query.Term) =>
-      val print = QueryPrinter.print(tq)
-      val parse = QueryParser.parse(print)
-      assertEquals(parse, Right(tq))
-    }
+  import QueryPrinter.print
+  import QueryParser.parse
+
+  property("Query.Term printing roundtrips") {
+    forAll(generators.plainTerm){ (q: Query.Term) => assertEquals(parse(print(q)), Right(q)) }
   }
 
 }
