@@ -21,11 +21,30 @@ import org.scalacheck.Prop._
 
 class RoundtripSuite extends ScalaCheckSuite {
 
-  import QueryPrinter.print
-  import QueryParser.parse
+  private def assertRoundTrips(query: Query)(implicit loc: munit.Location): Unit = {
+    val printed = QueryPrinter.print(query)
+    val parsed = QueryParser.parse(printed)
+    assertEquals(parsed, Right(query), s"printed query: $printed")
+  }
 
   property("Query.Term printing roundtrips") {
-    forAll(generators.plainTerm){ (q: Query.Term) => assertEquals(parse(print(q)), Right(q)) }
+    forAll(generators.plainTerm)(q => assertRoundTrips(q))
+  }
+
+  property("Query.Phrase printing roundtrips") {
+    forAll(generators.plainPhrase)(q => assertRoundTrips(q))
+  }
+
+  property("Query.Prefix printing roundtrips") {
+    forAll(generators.plainPrefix)(q => assertRoundTrips(q))
+  }
+
+  property("Query.Proximity printing roundtrips") {
+    forAll(generators.plainProximity)(q => assertRoundTrips(q))
+  }
+
+  property("Query.Fuzzy printing roundtrips") {
+    forAll(generators.plainFuzzy)(q => assertRoundTrips(q))
   }
 
 }
