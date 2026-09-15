@@ -14,15 +14,15 @@ ThisBuild / developers := List(
 // publish website from this branch
 ThisBuild / tlSitePublishBranch := Some("main")
 
-// use JDK 11
-ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11"))
+// use JDK 17
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
 ThisBuild / tlJdkRelease := Some(8)
 
 val Scala212 = "2.12.21"
 
 val Scala213 = "2.13.18"
 
-ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, "3.3.7")
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, "3.3.8")
 
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
