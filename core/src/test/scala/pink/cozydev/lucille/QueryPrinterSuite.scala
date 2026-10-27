@@ -227,31 +227,31 @@ class QueryPrinterSimpleQueryTermSuite extends munit.FunSuite {
   }
 
   test("prints regex term") {
-    val q = TermRegex("/.ump(s|ing)/")
+    val q = TermRegex(".ump(s|ing)")
     val str = QueryPrinter.print(q)
     assertEquals(str, "/.ump(s|ing)/")
   }
 
   test("prints term range [* TO *]") {
-    val q = TermRange(None, None, false, false)
+    val q = TermRange(None, None, true, true)
     val str = QueryPrinter.print(q)
     assertEquals(str, "[* TO *]")
   }
 
   test("prints term range [Apple TO Banana]") {
-    val q = TermRange(Some("Apple"), Some("Banana"), false, false)
+    val q = TermRange(Some("Apple"), Some("Banana"), true, true)
     val str = QueryPrinter.print(q)
     assertEquals(str, "[Apple TO Banana]")
   }
 
   test("prints term range {Apple TO Banana]") {
-    val q = TermRange(Some("Apple"), Some("Banana"), true, false)
+    val q = TermRange(Some("Apple"), Some("Banana"), false, true)
     val str = QueryPrinter.print(q)
     assertEquals(str, "{Apple TO Banana]")
   }
 
   test("prints term range [Apple TO Banana}") {
-    val q = TermRange(Some("Apple"), Some("Banana"), false, true)
+    val q = TermRange(Some("Apple"), Some("Banana"), true, false)
     val str = QueryPrinter.print(q)
     assertEquals(str, "[Apple TO Banana}")
   }

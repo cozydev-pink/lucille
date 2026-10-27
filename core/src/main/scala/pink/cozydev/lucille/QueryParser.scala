@@ -268,7 +268,7 @@ private object QueryParserHelpers {
   }
 
   /** Parse a regex query
-    * e.g. '/.ump(s|ing)'
+    * e.g. '/.ump(s|ing)/' the surrounding slashes are omitted.
     */
   val regexQ: P[TermRegex] = regex.map(TermRegex.apply)
 
